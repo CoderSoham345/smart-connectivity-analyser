@@ -3178,3 +3178,129 @@ async function exportHistoryToCSV() {
     alert('An error occurred while exporting network history.');
   }
 }
+
+/* ================================================
+   NETWORK HISTORY - EXPORT CSV REPORT
+   Does not modify existing dashboard functionality
+================================================ */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const exportButton = document.getElementById("exportCsvBtn");
+
+    if (!exportButton) {
+        console.error("Export CSV button not found!");
+        return;
+    }
+
+    exportButton.addEventListener("click", function () {
+
+        try {
+
+            // Get existing Chart.js chart
+            const chart = Chart.getChart("networkChart");
+
+            if (!chart) {
+                alert("Network history chart is not available yet.");
+                return;
+            }
+
+            const labels = chart.data.labels || [];
+            const datasets = chart.data.datasets || [];
+
+            if (labels.length === 0 || datasets.length === 0) {
+                alert("No network history data available to export.");
+                return;
+            }
+
+            // CSV headers
+            const headers = [
+                "Date / Time",
+                ...datasets.map(dataset => dataset.label || "Network Metric")
+            ];
+
+            const rows = [];
+
+            // Extract actual chart history
+            labels.forEach((label, index) => {
+
+                const row = [
+                    label,
+                    ...datasets.map(dataset => {
+                        const value = dataset.data[index];
+                        return value ?? "";
+                    })
+                ];
+
+                rows.push(row);
+
+            });
+
+            // Escape CSV values safely
+            function escapeCSV(value) {
+
+                const text = String(value ?? "");
+
+                return '"' + text.replace(/"/g, '""') + '"';
+
+            }
+
+            // Build CSV content
+            const csvContent = [
+                headers,
+                ...rows
+            ]
+                .map(row => row.map(escapeCSV).join(","))
+                .join("\r\n");
+
+            // UTF-8 BOM for Microsoft Excel compatibility
+            const BOM = "\uFEFF";
+
+            const blob = new Blob(
+                [BOM + csvContent],
+                {
+                    type: "text/csv;charset=utf-8;"
+                }
+            );
+
+            // Create downloadable file
+            const downloadURL = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+
+            const now = new Date();
+
+            const timestamp = [
+                now.getFullYear(),
+                String(now.getMonth() + 1).padStart(2, "0"),
+                String(now.getDate()).padStart(2, "0")
+            ].join("-");
+
+            link.href = downloadURL;
+
+            link.download = `network_history_${timestamp}.csv`;
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+            // Release temporary URL
+            setTimeout(() => {
+                URL.revokeObjectURL(downloadURL);
+            }, 1000);
+
+            console.log("Network history CSV downloaded successfully.");
+
+        } catch (error) {
+
+            console.error("CSV Export Error:", error);
+
+            alert("Unable to export network report. Check the browser console.");
+
+        }
+
+    });
+
+});

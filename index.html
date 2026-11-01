@@ -355,30 +355,17 @@
                     </div>
 
 
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <select id="historyRange">
 
-                        <!-- Export CSV Button -->
-                        <button
-                            id="exportCsvBtn"
-                            class="secondary-button"
-                            onclick="exportHistoryToCSV()"
-                        >
-                            📥 Export CSV
-                        </button>
+                        <option value="10">
+                            Recent
+                        </option>
 
-                        <select id="historyRange">
+                        <option value="20">
+                            Extended
+                        </option>
 
-                            <option value="10">
-                                Recent
-                            </option>
-
-                            <option value="20">
-                                Extended
-                            </option>
-
-                        </select>
-
-                    </div>
+                    </select>
 
                 </div>
 
@@ -400,6 +387,71 @@
             <div class="panel">
 
                 <div class="panel-header">
+                    
+<div class="panel-header">
+
+    <div>
+
+        <span class="section-label">
+            PERFORMANCE
+        </span>
+
+        <h2>
+            Network History
+        </h2>
+
+    </div>
+
+    <!-- HISTORY CONTROLS -->
+
+    <div class="history-controls-group">
+
+        <!-- EXPORT CSV BUTTON -->
+
+        <button
+            type="button"
+            id="exportCsvBtn"
+            class="custom-control-btn">
+
+            <svg
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                </path>
+
+            </svg>
+
+            <span>Export CSV</span>
+
+        </button>
+
+
+        <!-- EXISTING HISTORY DROPDOWN -->
+
+        <select id="historyRange">
+
+            <option value="10">
+                Recent
+            </option>
+
+            <option value="20">
+                Extended
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+
 
                     <div>
 

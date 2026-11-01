@@ -1342,7 +1342,54 @@ footer p {
     margin-bottom: 3px;
 }
 
+/* Fix Select Dropdown White Background & Options */
+select,
+.select-dropdown,
+#time-range-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 0.4rem 2rem 0.4rem 0.85rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.65rem center !important;
+  background-size: 1rem !important;
+  cursor: pointer;
+}
 
+/* Style Options Inside the Dropdown */
+select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  padding: 0.5rem !important;
+}
+
+/* Match Export CSV Button Styling Identically */
+#export-csv-btn {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 0.4rem 0.85rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+#export-csv-btn:hover,
+select:hover {
+  background-color: #334155 !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
 /* =========================================================
    LEAFLET CUSTOMIZATION
 ========================================================= */
@@ -1565,4 +1612,262 @@ footer p {
 
         font-size: 34px;
     }
+}
+/* Perfectly Matched Export CSV & Recent Dropdown Styling */
+#export-csv-btn,
+#time-range-select,
+select.btn-secondary {
+  height: 38px !important;
+  line-height: 38px !important;
+  padding: 0 0.85rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  box-sizing: border-box !important;
+  
+  /* Solid theme background & high-contrast border */
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  
+  /* Flex alignment for text and icons */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  
+  transition: all 0.2s ease-in-out !important;
+  cursor: pointer !important;
+}
+
+/* Custom Dropdown Arrow Positioning & Padding */
+#time-range-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  padding-right: 2.2rem !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.65rem center !important;
+  background-size: 1rem !important;
+}
+
+/* Shared Border Glow & Hover Highlights */
+#export-csv-btn:hover,
+#time-range-select:hover {
+  background-color: #334155 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3) !important;
+}
+/* Fix Select Dropdown White Background & Options */
+select,
+.select-dropdown,
+#time-range-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 8px !important;
+  padding: 0.4rem 2rem 0.4rem 0.85rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.65rem center !important;
+  background-size: 1rem !important;
+  cursor: pointer;
+}
+
+/* Style Options Inside the Dropdown */
+select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  padding: 0.5rem !important;
+}
+
+/* Force Exact Height & Alignment Match for Export CSV and Dropdown */
+#export-csv-btn,
+#time-range-select {
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  vertical-align: middle !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* Button Padding & Alignment */
+#export-csv-btn {
+  padding: 0 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+/* Select Dropdown Padding & Custom Arrow Position */
+#time-range-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  padding: 0 28px 0 14px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 8px center !important;
+  background-size: 14px !important;
+  cursor: pointer !important;
+}
+
+/* Identical Hover Highlight */
+#export-csv-btn:hover,
+#time-range-select:hover {
+  background-color: #334155 !important;
+  border-color: #3b82f6 !important;
+}
+
+/* ==========================================
+   NETWORK HISTORY CONTROL BUTTONS
+========================================== */
+
+.history-controls-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.custom-control-btn {
+    min-height: 42px;
+    padding: 0 15px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    background: #142943;
+    color: #eaf3ff;
+
+    border: 1px solid rgba(137, 172, 211, 0.22);
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-control-btn:hover {
+    background: #1b3857;
+    border-color: #25d4e8;
+    transform: translateY(-1px);
+}
+
+.custom-control-btn:focus-visible {
+    outline: 2px solid #25d4e8;
+    outline-offset: 3px;
+}
+
+select.custom-control-btn {
+    min-width: 110px;
+}
+
+/* Samsung Galaxy A12 */
+
+@media screen and (max-width: 480px) {
+
+    .history-controls-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .history-controls-group .custom-control-btn {
+        width: 100%;
+        min-width: 0;
+        min-height: 43px;
+        padding: 0 8px;
+        font-size: 10px;
+    }
+
+}
+
+/* History Controls */
+
+.history-controls-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.custom-control-btn {
+    min-height: 40px;
+    padding: 0 13px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    background: #142943;
+    color: #ffffff;
+
+    border: 1px solid #29415d;
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.custom-control-btn:hover {
+    background: #1b3857;
+    border-color: #25d4e8;
+}
+
+.history-controls-group select {
+    min-height: 40px;
+    min-width: 110px;
+    padding: 0 12px;
+
+    background: #142943;
+    color: white;
+
+    border: 1px solid #29415d;
+    border-radius: 10px;
+
+    cursor: pointer;
+}
+
+@media (max-width: 480px) {
+
+    .history-controls-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .history-controls-group button,
+    .history-controls-group select {
+        width: 100%;
+        min-width: 0;
+        font-size: 10px;
+    }
+
 }
