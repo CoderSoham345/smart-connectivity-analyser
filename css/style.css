@@ -1342,6 +1342,175 @@ footer p {
     margin-bottom: 3px;
 }
 
+/* Metric Card Visual Improvements */
+.metric-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive Grid Layout */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.85rem;
+  }
+}
+/* AI Unavailable Warning Badges */
+.ai-unavailable-msg {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+/* Application Readiness Bars & Percentage Accents */
+.readiness-card .progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-top: 0.75rem;
+}
+
+.readiness-card .progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  box-shadow: 0 0 10px currentColor;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Hero CTA Button Glow & Gradient */
+#start-test-btn, .btn-primary-glow {
+  background: linear-gradient(135deg, #0072ff 0%, #00c6ff 100%);
+  border: none;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 198, 255, 0.3);
+  transition: all 0.25s ease;
+}
+
+#start-test-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 198, 255, 0.5);
+}
+/* Chart Section Styling */
+.chart-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+/* Dark Mode Filter for Leaflet Map Tiles */
+.leaflet-tile-container img {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+.leaflet-container {
+  background: #0f172a !important;
+  border-radius: 12px;
+}
+/* Application Readiness Score Indicators */
+.score-high {
+  color: #10b981 !important; /* Green for 80%+ */
+}
+
+.score-medium {
+  color: #f59e0b !important; /* Amber for 50%-79% */
+}
+
+.score-low {
+  color: #ef4444 !important; /* Red for <50% */
+}
+/* Recommendation & Location Navigator Card Polish */
+.recommendation-card, .location-navigator-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+/* Application Readiness Grid Layout */
+.readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+/* Card Container Polish */
+.readiness-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.readiness-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Percentage Badge Accents */
+.readiness-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.readiness-score.high {
+  color: #10b981; /* Green for 80%-100% */
+}
+
+.readiness-score.medium {
+  color: #f59e0b; /* Amber for 50%-79% */
+}
+
+.readiness-score.low {
+  color: #ef4444; /* Red for <50% */
+}
+
+/* Progress Bar & Glow Accent */
+.readiness-progress-bg {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.75rem 0;
+}
+
+.readiness-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
 /* =========================================================
    LEAFLET CUSTOMIZATION

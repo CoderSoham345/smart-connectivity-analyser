@@ -2549,6 +2549,142 @@ function showLocationOnMap(latitude, longitude) {
         .bindPopup("Current Location")
         .openPopup();
 }
+// Enhanced Chart.js Configuration
+function renderHistoryChart(labels, connectivityScores, downloadSpeeds) {
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    
+    // Create soft gradients for chart lines
+    const scoreGradient = ctx.createLinearGradient(0, 0, 0, 300);
+    scoreGradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    scoreGradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+    const speedGradient = ctx.createLinearGradient(0, 0, 0, 300);
+    speedGradient.addColorStop(0, 'rgba(236, 72, 153, 0.4)');
+    speedGradient.addColorStop(1, 'rgba(236, 72, 153, 0.0)');
+
+    if (window.historyChartInstance) {
+        window.historyChartInstance.destroy();
+    }
+
+    window.historyChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Connectivity Score (0-100)',
+                    data: connectivityScores,
+                    borderColor: '#3b82f6',
+                    backgroundColor: scoreGradient,
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'yScore'
+                },
+                {
+                    label: 'Download Speed (Mbps)',
+                    data: downloadSpeeds,
+                    borderColor: '#ec4899',
+                    backgroundColor: speedGradient,
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ec4899',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'ySpeed'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#94a3b8',
+                        font: { family: 'Inter, sans-serif', size: 12, weight: '500' },
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    titleColor: '#f8fafc',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y + (context.dataset.yAxisID === 'ySpeed' ? ' Mbps' : ' / 100');
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b' }
+                },
+                yScore: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    min: 0,
+                    max: 100,
+                    title: { display: true, text: 'Connectivity Score', color: '#3b82f6' },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b' }
+                },
+                ySpeed: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    min: 0,
+                    title: { display: true, text: 'Speed (Mbps)', color: '#ec4899' },
+                    grid: { drawOnChartArea: false }, // Avoid duplicate grid lines
+                    ticks: { color: '#64748b' }
+                }
+            }
+        }
+    });
+}
+function updateReadinessCard(elementId, score) {
+    const scoreElement = document.getElementById(elementId);
+    if (!scoreElement) return;
+
+    scoreElement.textContent = `${score}%`;
+    
+    // Remove old state classes
+    scoreElement.classList.remove('high', 'medium', 'low');
+
+    // Apply color class based on thresholds
+    if (score >= 80) {
+        scoreElement.classList.add('high');
+    } else if (score >= 50) {
+        scoreElement.classList.add('medium');
+    } else {
+        scoreElement.classList.add('low');
+    }
+}
 
 
 /* =========================================================

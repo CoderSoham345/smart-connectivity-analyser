@@ -384,6 +384,25 @@
 
 
                 <div class="chart-container">
+                    <div class="chart-container">
+    <div class="chart-header-stats flex justify-between items-center mb-3 text-xs text-gray-400">
+      <div class="flex gap-4">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+          <span>Score (0-100)</span>
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-pink-500 inline-block"></span>
+          <span>Speed (Mbps)</span>
+        </span>
+      </div>
+      <span class="text-gray-500">Hover graph points for details</span>
+    </div>
+
+    <canvas
+        id="networkChart">
+    </canvas>
+</div>
 
                     <canvas
                         id="networkChart">
