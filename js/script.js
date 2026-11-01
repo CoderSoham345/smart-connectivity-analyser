@@ -3114,3 +3114,67 @@ window.smartConnectivity = {
 
     findBetterConnectionArea
 };
+/**
+ * Export saved network connectivity history as a CSV file.
+ */
+async function exportHistoryToCSV() {
+  try {
+    // 1. Retrieve history records from the API endpoint
+    const response = await fetch('/api/network-history');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch history records: ${response.statusText}`);
+    }
+
+    const records = await response.json();
+
+    // 2. Acceptance Criteria: Handle empty history gracefully
+    if (!Array.isArray(records) || records.length === 0) {
+      alert('No history records available to export.');
+      return;
+    }
+
+    // 3. Define CSV Headers matching requirements
+    const headers = [
+      'Timestamp',
+      'Download Speed (Mbps)',
+      'Upload Speed (Mbps)',
+      'Ping (ms)',
+      'Connectivity Score'
+    ];
+
+    const csvRows = [headers.join(',')];
+
+    // 4. Map records and escape fields safely
+    records.forEach(record => {
+      const timestamp = record.timestamp ? `"${record.timestamp.replace(/"/g, '""')}"` : '"N/A"';
+      const downloadSpeed = record.download_speed ?? record.downloadSpeed ?? 'N/A';
+      const uploadSpeed = record.upload_speed ?? record.uploadSpeed ?? 'N/A';
+      const ping = record.ping ?? 'N/A';
+      const score = record.connectivity_score ?? record.connectivityScore ?? record.score ?? 'N/A';
+
+      csvRows.push([timestamp, downloadSpeed, uploadSpeed, ping, score].join(','));
+    });
+
+    // 5. Create Blob and trigger file download
+    const csvContent = csvRows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blobUrl = URL.createObjectURL(blob);
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = blobUrl;
+
+    const today = new Date().toISOString().split('T')[0];
+    downloadLink.setAttribute('download', `network_history_${today}.csv`);
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+
+    // Clean up temporary DOM elements and memory
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(blobUrl);
+
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    alert('An error occurred while exporting network history.');
+  }
+}

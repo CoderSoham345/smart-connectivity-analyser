@@ -355,17 +355,30 @@
                     </div>
 
 
-                    <select id="historyRange">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
 
-                        <option value="10">
-                            Recent
-                        </option>
+                        <!-- Export CSV Button -->
+                        <button
+                            id="exportCsvBtn"
+                            class="secondary-button"
+                            onclick="exportHistoryToCSV()"
+                        >
+                            📥 Export CSV
+                        </button>
 
-                        <option value="20">
-                            Extended
-                        </option>
+                        <select id="historyRange">
 
-                    </select>
+                            <option value="10">
+                                Recent
+                            </option>
+
+                            <option value="20">
+                                Extended
+                            </option>
+
+                        </select>
+
+                    </div>
 
                 </div>
 
