@@ -1,913 +1,1269 @@
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Connectivity Analyser</title>
 
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <meta name="description"
-        content="Smart Internet Connectivity Analyser">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <title>Smart Connectivity Analyser</title>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Leaflet Map -->
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            indigoDeep: '#1E1B4B',
+            slateMuted: '#475569',
+            accentViolet: '#8B5CF6',
+            accentPink: '#EC4899',
+            iceBlue: '#A5B4FC',
+            lightViolet: '#C084FC',
+            cyanAccent: '#67E8F9'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    body {
+      background:
+        radial-gradient(at 0% 0%, #A5B4FC 0px, transparent 50%),
+        radial-gradient(at 100% 0%, #C084FC 0px, transparent 50%),
+        radial-gradient(at 50% 100%, #67E8F9 0px, transparent 50%),
+        radial-gradient(at 100% 100%, #A5B4FC 0px, transparent 50%),
+        #e0e7ff;
+      background-attachment: fixed;
+      min-height: 100vh;
+      color: #1E1B4B;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+      transition: all 0.25s ease-in-out;
+    }
+
+    .glass-card:hover {
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
+    }
+
+    .bg-accent-gradient {
+      background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    }
+
+    .text-accent-gradient {
+      background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .control-btn-matched {
+      height: 38px !important;
+      min-height: 38px !important;
+      box-sizing: border-box !important;
+      padding: 0 16px !important;
+      font-size: 0.875rem !important;
+      font-weight: 600 !important;
+      border-radius: 12px !important;
+      background: rgba(255, 255, 255, 0.75) !important;
+      color: #1E1B4B !important;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      cursor: pointer !important;
+    }
+
+    .control-btn-matched:hover {
+      background: white !important;
+      border-color: #8B5CF6 !important;
+    }
+
+    select.control-btn-matched {
+      appearance: none !important;
+      padding-right: 36px !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238B5CF6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 10px center !important;
+      background-size: 16px !important;
+    }
+
+    select.control-btn-matched option {
+      background: white !important;
+      color: #1E1B4B !important;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.4);
+      border-radius: 10px;
+    }
+
+    /* CONNECTIVITY MAP */
+
+    #connectivity-map {
+      width: 100%;
+      height: 100%;
+      min-height: 320px;
+      border-radius: 14px;
+      z-index: 1;
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: rgba(255, 255, 255, 0.9) !important;
+      backdrop-filter: blur(12px) !important;
+      border-radius: 12px !important;
+      color: #1E1B4B !important;
+    }
+
+    .leaflet-popup-tip {
+      background: white !important;
+    }
+
+    /* CONNECTIVITY SCORE CARD */
+
+    .score-card {
+      grid-column: 1 / -1;
+      min-width: 0;
+      color: #1E1B4B;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-self: stretch;
+    }
+
+    .score-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .score-value-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      line-height: 1;
+    }
+
+    .score-number {
+      font-size: clamp(2.8rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.06em;
+      color: #1E1B4B;
+    }
+
+    .score-out-of {
+      padding-bottom: 7px;
+      color: #64748b;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .quality-text {
+      width: fit-content;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.12);
+      color: #6D28D9;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      flex: 0 0 10px;
+      border-radius: 50%;
+      background: #94a3b8;
+      box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.14);
+    }
+
+    .score-meter {
+      width: 100%;
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.12);
+    }
+
+    .score-meter-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #8B5CF6, #EC4899);
+      transition: width 0.45s ease;
+    }
+
+    .score-help {
+      border-top: 1px solid rgba(139, 92, 246, 0.14);
+      padding-top: 10px;
+      font-size: 0.78rem;
+    }
+
+    .score-help summary {
+      color: #475569;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .score-help-content {
+      padding: 10px 2px 2px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .score-guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .score-guide-table th,
+    .score-guide-table td {
+      padding: 6px 8px;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+    }
+
+    .rating-excellent {
+      color: #059669;
+      font-weight: 700;
+    }
+
+    .rating-good {
+      color: #0D9488;
+      font-weight: 700;
+    }
+
+    .rating-average {
+      color: #D97706;
+      font-weight: 700;
+    }
+
+    .rating-poor {
+      color: #DC2626;
+      font-weight: 700;
+    }
+
+    @media (min-width: 640px) {
+      .score-card {
+        grid-column: span 3 / span 3;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #connectivity-map {
+        min-height: 300px;
+      }
+
+      .score-card {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 
-<body>
+<body class="p-4 md:p-8 font-sans antialiased">
 
-    <!-- NAVIGATION -->
+  <div class="max-w-7xl mx-auto space-y-6">
 
-    <header class="topbar">
+    <!-- HEADER -->
 
-        <div class="brand">
+    <header class="glass-card p-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
 
-            <div class="brand-icon">
-                📡
-            </div>
-
-            <div>
-                <h1>Smart Connectivity</h1>
-                <span>Internet Analyser</span>
-            </div>
-
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-accent-gradient flex items-center justify-center text-white shadow-md">
+          <i class="fa-solid fa-network-wired text-lg"></i>
         </div>
 
-        <nav class="nav-links">
+        <div>
+          <h1 class="text-xl font-bold text-indigoDeep">Smart Connectivity</h1>
+          <p class="text-xs text-slateMuted font-medium">Real-Time Network Analyser</p>
+        </div>
+      </div>
 
-            <a href="#dashboard">Dashboard</a>
+      <nav class="flex items-center gap-1 bg-white/40 p-1.5 rounded-xl border border-white/60">
+        <a href="#dashboard" class="px-4 py-2 text-xs font-semibold rounded-lg bg-accent-gradient text-white">Dashboard</a>
+        <a href="#history" class="px-4 py-2 text-xs font-semibold text-slateMuted hover:bg-white/50 rounded-lg">History</a>
+        <a href="#applications" class="px-4 py-2 text-xs font-semibold text-slateMuted hover:bg-white/50 rounded-lg">Applications</a>
+        <a href="#location" class="px-4 py-2 text-xs font-semibold text-slateMuted hover:bg-white/50 rounded-lg">Location</a>
+      </nav>
 
-            <a href="#history">History</a>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          Online
+        </div>
 
-            <a href="#applications">Applications</a>
-
-            <a href="#location">Location</a>
-
-        </nav>
-
-        <button
-            id="menuButton"
-            class="menu-button"
-        >
-            ☰
+        <button id="run-test-btn" onclick="runNetworkTest()" class="px-4 py-2 rounded-xl bg-accent-gradient text-white text-xs font-semibold shadow-md flex items-center gap-2">
+          <i class="fa-solid fa-bolt text-amber-300"></i>
+          <span id="test-btn-text">Run Test</span>
         </button>
+      </div>
 
     </header>
 
+    <!-- DASHBOARD KPI CARDS -->
+
+    <section id="dashboard" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+
+      <div class="glass-card p-4 space-y-2">
+        <div class="flex justify-between text-slateMuted text-xs font-semibold">
+          DOWNLOAD <i class="fa-solid fa-arrow-down text-accentViolet"></i>
+        </div>
+        <div class="text-2xl font-extrabold" id="kpi-download">94.2</div>
+        <div class="text-xs text-slateMuted">Mbps</div>
+        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
+          <div id="bar-download" class="bg-accent-gradient h-full rounded-full" style="width:82%"></div>
+        </div>
+      </div>
+
+      <div class="glass-card p-4 space-y-2">
+        <div class="flex justify-between text-slateMuted text-xs font-semibold">
+          UPLOAD <i class="fa-solid fa-arrow-up text-accentPink"></i>
+        </div>
+        <div class="text-2xl font-extrabold" id="kpi-upload">38.6</div>
+        <div class="text-xs text-slateMuted">Mbps</div>
+        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
+          <div id="bar-upload" class="bg-accent-gradient h-full rounded-full" style="width:65%"></div>
+        </div>
+      </div>
+
+      <div class="glass-card p-4 space-y-2">
+        <div class="flex justify-between text-slateMuted text-xs font-semibold">
+          PING <i class="fa-solid fa-wave-square text-cyan-500"></i>
+        </div>
+        <div class="text-2xl font-extrabold" id="kpi-ping">14</div>
+        <div class="text-xs text-slateMuted">ms</div>
+        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
+          <div id="bar-ping" class="bg-emerald-500 h-full rounded-full" style="width:90%"></div>
+        </div>
+      </div>
+
+      <div class="glass-card p-4 space-y-2">
+        <div class="flex justify-between text-slateMuted text-xs font-semibold">
+          JITTER <i class="fa-solid fa-wave-square text-accentViolet"></i>
+        </div>
+        <div class="text-2xl font-extrabold" id="kpi-jitter">2.1</div>
+        <div class="text-xs text-slateMuted">ms</div>
+        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
+          <div id="bar-jitter" class="bg-emerald-400 h-full rounded-full" style="width:95%"></div>
+        </div>
+      </div>
+
+      <div class="glass-card p-4 space-y-2">
+        <div class="flex justify-between text-slateMuted text-xs font-semibold">
+          PACKET LOSS <i class="fa-solid fa-circle-exclamation text-amber-500"></i>
+        </div>
+        <div class="text-2xl font-extrabold" id="kpi-loss">0.0</div>
+        <div class="text-xs text-slateMuted">%</div>
+        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
+          <div id="bar-loss" class="bg-emerald-500 h-full rounded-full" style="width:100%"></div>
+        </div>
+      </div>
+
+      <div class="glass-card p-4 space-y-2">
+        <div class="flex justify-between text-slateMuted text-xs font-semibold">
+          NETWORK <i class="fa-solid fa-wifi text-accentViolet"></i>
+        </div>
+        <div class="text-2xl font-extrabold" id="network-type">Wi-Fi</div>
+        <div class="text-xs text-slateMuted">Connection type</div>
+        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
+          <div class="bg-accent-gradient h-full rounded-full w-full"></div>
+        </div>
+      </div>
+
+      <!-- CONNECTIVITY SCORE CARD -->
+
+      <aside class="score-card glass-card p-5 md:p-6" aria-label="Connectivity score summary">
+
+        <div class="score-header">
+          <span>Connectivity Score</span>
+          <span id="networkStatusDot" class="status-dot" aria-label="Network status indicator"></span>
+        </div>
+
+        <div class="score-value-row">
+          <div id="score" class="score-number">0</div>
+          <div class="score-out-of">/100</div>
+        </div>
+
+        <div id="status" class="quality-text" aria-live="polite">Not Connected</div>
+
+        <div class="score-meter" aria-hidden="true">
+          <div id="scoreProgress" class="score-meter-fill"></div>
+        </div>
+
+        <details class="score-help">
+          <summary>How is this calculated?</summary>
+          <div class="score-help-content">
+            <p>
+              The connectivity score is calculated using download speed,
+              upload speed, ping, jitter and packet loss.
+            </p>
+          </div>
+        </details>
+
+        <details class="score-help">
+          <summary>Connectivity Score Guide</summary>
+          <div class="score-help-content">
+            <table class="score-guide-table">
+              <thead>
+                <tr>
+                  <th>Score</th>
+                  <th>Rating</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>85–100</td><td class="rating-excellent">Excellent</td></tr>
+                <tr><td>70–84</td><td class="rating-good">Good</td></tr>
+                <tr><td>50–69</td><td class="rating-average">Average</td></tr>
+                <tr><td>0–49</td><td class="rating-poor">Poor</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
 
-    <!-- MAIN -->
+      </aside>
 
-    <main class="container">
+    </section>
 
+    <!-- NETWORK HISTORY -->
 
-        <!-- HERO -->
+    <section id="history" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <section
-            id="dashboard"
-            class="hero-section"
-        >
+      <div class="lg:col-span-2 glass-card p-5 md:p-6 space-y-4">
 
-            <div class="hero-content">
+        <div class="flex flex-col sm:flex-row justify-between gap-4 pb-3 border-b border-white/40">
 
-                <span class="badge">
-                    AI-POWERED NETWORK ANALYSIS
-                </span>
+          <div>
+            <h2 class="text-lg font-bold">Network History</h2>
+            <p class="text-xs text-slateMuted">Performance score and speed trends</p>
+          </div>
 
-                <h2>
-                    Your Internet,
-                    <span>intelligently analysed.</span>
-                </h2>
+          <div class="flex items-center gap-3">
+            <button id="export-csv-btn" onclick="exportHistoryCSV()" class="control-btn-matched">
+              <i class="fa-solid fa-file-csv text-accentViolet"></i>
+              Export CSV
+            </button>
 
-                <p>
-                    Monitor network quality, analyse connectivity,
-                    detect problems and understand your Internet
-                    performance in real time.
-                </p>
+            <select id="time-range-select" onchange="updateChartRange(this.value)" class="control-btn-matched">
+              <option value="recent">Recent</option>
+              <option value="1h">Last 1 Hour</option>
+              <option value="24h">Last 24 Hours</option>
+              <option value="7d">Last 7 Days</option>
+            </select>
+          </div>
 
-                <button
-                    id="startTest"
-                    class="primary-button"
-                >
-                    ▶ Start Network Test
-                </button>
+        </div>
 
-                <p
-                    id="testMessage"
-                    class="test-message"
-                >
-                    Ready to test your connection.
-                </p>
+        <div class="relative w-full h-72">
+          <canvas id="networkChart"></canvas>
+        </div>
 
-            </div>
+      </div>
 
+      <!-- SESSION STATISTICS -->
 
-            <!-- Connectivity Score -->
+      <div class="glass-card p-5 md:p-6 space-y-4">
 
-            <div class="score-card">
+        <h2 class="text-lg font-bold border-b border-white/40 pb-3">Session Statistics</h2>
 
-                <div class="score-header">
+        <div class="space-y-4">
 
-                    <span>
-                        Connectivity Score
-                    </span>
+          <div class="flex justify-between p-3 rounded-xl bg-white/40">
+            <span class="text-xs font-semibold">Session Duration</span>
+            <strong id="stat-duration">00:00:00</strong>
+          </div>
 
-                    <span
-                        id="networkStatusDot"
-                        class="status-dot"
-                    ></span>
+          <div class="flex justify-between p-3 rounded-xl bg-white/40">
+            <span class="text-xs font-semibold">Average Speed</span>
+            <strong id="stat-avg-speed">0 Mbps</strong>
+          </div>
 
-                </div>
+          <div class="flex justify-between p-3 rounded-xl bg-white/40">
+            <span class="text-xs font-semibold">Average Ping</span>
+            <strong id="stat-avg-ping">0 ms</strong>
+          </div>
 
-                <div
-                    id="score"
-                    class="score-number"
-                >
-                    0
-                </div>
+          <div class="flex justify-between p-3 rounded-xl bg-white/40">
+            <span class="text-xs font-semibold">Peak Speed</span>
+            <strong id="stat-peak-speed">0 Mbps</strong>
+          </div>
 
-                <div class="score-out-of">
-                    /100
-                </div>
+          <div class="flex justify-between p-3 rounded-xl bg-white/40">
+            <span class="text-xs font-semibold">Downtime</span>
+            <strong id="stat-downtime">0 min</strong>
+          </div>
 
-                <div
-                    id="status"
-                    class="quality-text"
-                >
-                    Not Connected
-                </div>
+        </div>
+      </div>
 
-                <details class="score-help">
+    </section>
 
-                    <summary>
-                        How is this calculated?
-                    </summary>
+    <!-- CONNECTIVITY MAP -->
 
-                    <div class="score-help-content">
+    <section id="location" class="glass-card p-5 md:p-6 space-y-4">
 
-                        <p>
-                            Your score is calculated using five network
-                            metrics: Download speed, Upload speed,
-                            Ping, Jitter, and Packet loss.
-                        </p>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/40 pb-3">
 
-                    </div>
+        <div>
+          <h2 class="text-lg font-bold">Interactive Connectivity Map</h2>
+          <p class="text-xs text-slateMuted">Network nodes and connectivity routes</p>
+        </div>
 
-                </details>
-
-                <details class="score-help">
-
-                    <summary>
-                        Connectivity Score Guide
-                    </summary>
-
-                    <div class="score-help-content">
-
-                        <table>
-
-                            <thead>
-                                <tr>
-                                    <th scope="col">Score</th>
-                                    <th scope="col">Rating</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-
-                                <tr>
-                                    <td>&ge; 85</td>
-                                    <td class="rating-excellent">Excellent</td>
-                                </tr>
-
-                                <tr>
-                                    <td>&ge; 70</td>
-                                    <td class="rating-good">Good</td>
-                                </tr>
-
-                                <tr>
-                                    <td>&ge; 50</td>
-                                    <td class="rating-average">Average</td>
-                                </tr>
-
-                                <tr>
-                                    <td>&lt; 50</td>
-                                    <td class="rating-poor">Poor</td>
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </details>
-
-            </div>
-
-        </section>
-
-
-        <!-- NETWORK METRICS -->
-
-        <section class="metrics-grid">
-
-            <!-- Download -->
-
-            <div class="metric-card">
-
-                <div class="metric-icon">↓</div>
-
-                <div>
-                    <span>Download</span>
-
-                    <strong id="download">
-                        0 Mbps
-                    </strong>
-                </div>
-
-            </div>
-
-
-            <!-- Upload -->
-
-            <div class="metric-card">
-
-                <div class="metric-icon">↑</div>
-
-                <div>
-                    <span>Upload</span>
-
-                    <strong id="upload">
-                        0 Mbps
-                    </strong>
-                </div>
-
-            </div>
-
-
-            <!-- Ping -->
-
-            <div class="metric-card">
-
-                <div class="metric-icon">◉</div>
-
-                <div>
-                    <span>Ping</span>
-
-                    <strong id="ping">
-                        0 ms
-                    </strong>
-                </div>
-
-            </div>
-
-
-            <!-- Jitter -->
-
-            <div class="metric-card">
-
-                <div class="metric-icon">≋</div>
-
-                <div>
-                    <span>Jitter</span>
-
-                    <strong id="jitter">
-                        0 ms
-                    </strong>
-                </div>
-
-            </div>
-
-
-            <!-- Packet Loss -->
-
-            <div class="metric-card">
-
-                <div class="metric-icon">%</div>
-
-                <div>
-                    <span>Packet Loss</span>
-
-                    <strong id="packetLoss">
-                        0%
-                    </strong>
-                </div>
-
-            </div>
-
-
-            <!-- Network Type -->
-
-            <div class="metric-card">
-
-                <div class="metric-icon">📶</div>
-
-                <div>
-                    <span>Network Type</span>
-
-                    <strong id="networkType">
-                        Checking...
-                    </strong>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- HISTORY + SESSION -->
-
-        <section
-            id="history"
-            class="two-column"
-        >
-
-            <!-- Network History -->
-
-            <div class="panel chart-panel">
-
-                <div class="panel-header">
-
-                    <div>
-
-                        <span class="section-label">
-                            PERFORMANCE
-                        </span>
-
-                        <h2>
-                            Network History
-                        </h2>
-
-                    </div>
-
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-
-                        <button
-                            id="exportCsvBtn"
-                            class="secondary-button"
-                            onclick="exportHistoryToCSV()"
-                        >
-                            📥 Export CSV
-                        </button>
-
-                        <select id="historyRange">
-
-                            <option value="10">
-                                Recent
-                            </option>
-
-                            <option value="20">
-                                Extended
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-                <!-- Single chart container -->
-
-                <div class="chart-container">
-
-                    <div class="chart-header-stats flex justify-between items-center mb-3 text-xs text-gray-400">
-
-                        <div class="flex gap-4">
-
-                            <span class="flex items-center gap-1.5">
-
-                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-
-                                <span>Score (0-100)</span>
-
-                            </span>
-
-                            <span class="flex items-center gap-1.5">
-
-                                <span class="w-2.5 h-2.5 rounded-full bg-pink-500 inline-block"></span>
-
-                                <span>Speed (Mbps)</span>
-
-                            </span>
-
-                        </div>
-
-                        <span class="text-gray-500">
-                            Hover graph points for details
-                        </span>
-
-                    </div>
-
-                    <!-- Do not rename this canvas ID -->
-
-                    <canvas id="networkChart"></canvas>
-
-                </div>
-
-            </div>
-
-
-            <!-- Session Statistics -->
-
-            <div class="panel">
-
-                <div class="panel-header">
-
-                    <div>
-
-                        <span class="section-label">
-                            SESSION
-                        </span>
-
-                        <h2>
-                            Session Statistics
-                        </h2>
-
-                    </div>
-
-                </div>
-
-                <div class="statistics-list">
-
-                    <div class="stat-row">
-
-                        <span>Session Duration</span>
-
-                        <strong id="sessionTime">
-                            00:00:00
-                        </strong>
-
-                    </div>
-
-                    <div class="stat-row">
-
-                        <span>Average Speed</span>
-
-                        <strong id="averageSpeed">
-                            0 Mbps
-                        </strong>
-
-                    </div>
-
-                    <div class="stat-row">
-
-                        <span>Average Ping</span>
-
-                        <strong id="averagePing">
-                            0 ms
-                        </strong>
-
-                    </div>
-
-                    <div class="stat-row">
-
-                        <span>Peak Speed</span>
-
-                        <strong id="peakSpeed">
-                            0 Mbps
-                        </strong>
-
-                    </div>
-
-                    <div class="stat-row">
-
-                        <span>Downtime</span>
-
-                        <strong id="downtime">
-                            0 min
-                        </strong>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- AI FEATURES -->
-
-        <section class="ai-grid">
-
-            <!-- Prediction -->
-
-            <div class="ai-card prediction-card">
-
-                <div class="ai-icon">🧠</div>
-
-                <div>
-
-                    <span class="section-label">
-                        AI PREDICTION
-                    </span>
-
-                    <h2>
-                        Future Connectivity
-                    </h2>
-
-                    <p
-                        id="predictionResult"
-                        class="ai-result"
-                    >
-                        Waiting for network data
-                    </p>
-
-                    <small>
-                        Model: Transformer + TCN
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <!-- Anomaly -->
-
-            <div class="ai-card anomaly-card">
-
-                <div class="ai-icon">🔍</div>
-
-                <div>
-
-                    <span class="section-label">
-                        AI MONITOR
-                    </span>
-
-                    <h2>
-                        Anomaly Detection
-                    </h2>
-
-                    <p
-                        id="anomalyResult"
-                        class="ai-result"
-                    >
-                        Waiting for network data
-                    </p>
-
-                    <small>
-                        Model: Transformer Autoencoder
-                    </small>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- APPLICATION READINESS -->
-
-        <section
-            id="applications"
-            class="section"
-        >
-
-            <div class="section-heading">
-
-                <span class="section-label">
-                    APPLICATION EXPERIENCE
-                </span>
-
-                <h2>
-                    Application Readiness
-                </h2>
-
-                <p>
-                    Estimated suitability based on current
-                    network conditions.
-                </p>
-
-            </div>
-
-            <div class="application-grid">
-
-
-                <!-- Gaming -->
-
-                <div class="application-card">
-
-                    <div class="application-top">
-
-                        <span class="application-icon">🎮</span>
-
-                        <span
-                            id="gamingScore"
-                            class="application-score"
-                        >
-                            0%
-                        </span>
-
-                    </div>
-
-                    <h3>Gaming</h3>
-
-                    <div class="progress-bar">
-
-                        <div
-                            id="gamingProgress"
-                            class="progress-fill"
-                        ></div>
-
-                    </div>
-
-                    <p>
-                        Latency, jitter and packet loss.
-                    </p>
-
-                </div>
-
-
-                <!-- Video Call -->
-
-                <div class="application-card">
-
-                    <div class="application-top">
-
-                        <span class="application-icon">📹</span>
-
-                        <span
-                            id="videoCallScore"
-                            class="application-score"
-                        >
-                            0%
-                        </span>
-
-                    </div>
-
-                    <h3>Video Call</h3>
-
-                    <div class="progress-bar">
-
-                        <div
-                            id="videoCallProgress"
-                            class="progress-fill"
-                        ></div>
-
-                    </div>
-
-                    <p>
-                        Upload speed and connection stability.
-                    </p>
-
-                </div>
-
-
-                <!-- Streaming -->
-
-                <div class="application-card">
-
-                    <div class="application-top">
-
-                        <span class="application-icon">🎬</span>
-
-                        <span
-                            id="streamingScore"
-                            class="application-score"
-                        >
-                            0%
-                        </span>
-
-                    </div>
-
-                    <h3>Streaming</h3>
-
-                    <div class="progress-bar">
-
-                        <div
-                            id="streamingProgress"
-                            class="progress-fill"
-                        ></div>
-
-                    </div>
-
-                    <p>
-                        Download speed and packet loss.
-                    </p>
-
-                </div>
-
-
-                <!-- Browsing -->
-
-                <div class="application-card">
-
-                    <div class="application-top">
-
-                        <span class="application-icon">🌐</span>
-
-                        <span
-                            id="browsingScore"
-                            class="application-score"
-                        >
-                            0%
-                        </span>
-
-                    </div>
-
-                    <h3>Browsing</h3>
-
-                    <div class="progress-bar">
-
-                        <div
-                            id="browsingProgress"
-                            class="progress-fill"
-                        ></div>
-
-                    </div>
-
-                    <p>
-                        Speed, latency and packet loss.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- SMART DIAGNOSIS -->
-
-        <section class="diagnosis-section">
-
-            <div class="diagnosis-card">
-
-                <div class="diagnosis-icon">💡</div>
-
-                <div>
-
-                    <span class="section-label">
-                        SMART DIAGNOSIS
-                    </span>
-
-                    <h2>
-                        Network Recommendation
-                    </h2>
-
-                    <p id="recommendation">
-                        Connect to the Internet to begin
-                        network analysis.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- LOCATION -->
-
-        <section
-            id="location"
-            class="section"
-        >
-
-            <div class="section-heading">
-
-                <span class="section-label">
-                    LOCATION ANALYSIS
-                </span>
-
-                <h2>
-                    Connectivity Map
-                </h2>
-
-                <p>
-                    Find network quality around your location
-                    and identify better connectivity areas.
-                </p>
-
-            </div>
-
-            <div class="location-grid">
-
-
-                <!-- Map -->
-
-                <div class="panel map-panel">
-
-                    <div
-                        id="connectivityMap"
-                        class="map"
-                    ></div>
-
-                    <div class="map-legend">
-
-                        <div>
-                            <span class="legend-dot good"></span>
-                            Good
-                        </div>
-
-                        <div>
-                            <span class="legend-dot medium"></span>
-                            Medium
-                        </div>
-
-                        <div>
-                            <span class="legend-dot poor"></span>
-                            Poor
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Location Control -->
-
-                <div class="panel location-control">
-
-                    <span class="section-label">
-                        NETWORK NAVIGATOR
-                    </span>
-
-                    <h2>
-                        Analyze Your Area
-                    </h2>
-
-                    <p>
-                        Allow location access to measure your
-                        current network quality and build a
-                        connectivity map.
-                    </p>
-
-                    <button
-                        id="detectLocation"
-                        class="primary-button full-width"
-                    >
-                        📍 Detect My Location
-                    </button>
-
-                    <button
-                        id="saveLocation"
-                        class="secondary-button full-width"
-                    >
-                        + Save Network Point
-                    </button>
-
-                    <button
-                        id="findBetterArea"
-                        class="secondary-button full-width"
-                    >
-                        🧭 Find Better Network Area
-                    </button>
-
-                    <div
-                        id="locationResult"
-                        class="location-result"
-                    >
-                        Location not detected.
-                    </div>
-
-                    <div
-                        id="navigationResult"
-                        class="navigation-result"
-                    ></div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-
-    <!-- FOOTER -->
-
-    <footer>
-
-        <p>
-            Smart Connectivity Analyser
-        </p>
-
-        <span>
-            AI-powered Internet Quality Monitoring
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-accentViolet/10 text-accentViolet">
+          <i class="fa-solid fa-server"></i>
+          Mumbai - Cloud South
         </span>
 
-    </footer>
+      </div>
 
+      <div class="relative w-full h-80 rounded-2xl overflow-hidden border border-white/60 shadow-inner">
+        <div id="connectivity-map" class="w-full h-full"></div>
+      </div>
 
-    <!-- JavaScript -->
+      <div class="flex flex-wrap gap-4 text-xs font-semibold text-slateMuted">
+        <span><i class="fa-solid fa-circle text-emerald-500"></i> Good Connectivity</span>
+        <span><i class="fa-solid fa-circle text-amber-500"></i> Medium Connectivity</span>
+        <span><i class="fa-solid fa-circle text-red-500"></i> Poor Connectivity</span>
+      </div>
 
-    <script src="js/connectivity-score.js"></script>
-    <script src="js/script.js"></script>
+    </section>
+
+    <!-- APPLICATION READINESS -->
+
+    <section id="applications" class="space-y-4">
+
+      <h2 class="text-xl font-bold">Application Readiness</h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <div class="glass-card p-5">
+          <div class="text-2xl">🎮</div>
+          <h3 class="font-bold mt-3">Gaming</h3>
+          <p class="text-xs text-slateMuted mt-2">Latency, jitter and packet loss.</p>
+          <strong id="gamingScore">0%</strong>
+          <div class="bg-white/60 h-1.5 rounded-full mt-3">
+            <div id="gamingProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="glass-card p-5">
+          <div class="text-2xl">📹</div>
+          <h3 class="font-bold mt-3">Video Calling</h3>
+          <p class="text-xs text-slateMuted mt-2">Upload speed and stability.</p>
+          <strong id="videoCallScore">0%</strong>
+          <div class="bg-white/60 h-1.5 rounded-full mt-3">
+            <div id="videoCallProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="glass-card p-5">
+          <div class="text-2xl">🎬</div>
+          <h3 class="font-bold mt-3">Streaming</h3>
+          <p class="text-xs text-slateMuted mt-2">Download speed and packet loss.</p>
+          <strong id="streamingScore">0%</strong>
+          <div class="bg-white/60 h-1.5 rounded-full mt-3">
+            <div id="streamingProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="glass-card p-5">
+          <div class="text-2xl">🌐</div>
+          <h3 class="font-bold mt-3">Browsing</h3>
+          <p class="text-xs text-slateMuted mt-2">Speed, latency and packet loss.</p>
+          <strong id="browsingScore">0%</strong>
+          <div class="bg-white/60 h-1.5 rounded-full mt-3">
+            <div id="browsingProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- AI INSIGHTS -->
+
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <div class="glass-card p-5 flex gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-accent-gradient flex items-center justify-center text-white text-xl">
+          <i class="fa-solid fa-brain"></i>
+        </div>
+
+        <div>
+          <h3 class="font-bold">AI Future Prediction</h3>
+          <p id="predictionResult" class="text-xs text-slateMuted mt-2">
+            Waiting for network data.
+          </p>
+        </div>
+      </div>
+
+      <div class="glass-card p-5 flex gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-700 text-xl">
+          <i class="fa-solid fa-shield-virus"></i>
+        </div>
+
+        <div>
+          <h3 class="font-bold">AI Anomaly Detection</h3>
+          <p id="anomalyResult" class="text-xs text-slateMuted mt-2">
+            Waiting for network data.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RECOMMENDATION -->
+
+    <section class="glass-card p-5">
+      <div class="flex items-center gap-4">
+        <div class="text-3xl">💡</div>
+
+        <div>
+          <h2 class="font-bold">Network Recommendation</h2>
+          <p id="recommendation" class="text-xs text-slateMuted mt-2">
+            Connect to the Internet to begin network analysis.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- TOAST -->
+
+  <div id="toast" class="fixed bottom-6 right-6 px-4 py-3 rounded-xl bg-indigoDeep text-white text-xs font-semibold shadow-2xl opacity-0 pointer-events-none transition-all z-50">
+    <span id="toast-message">Notification</span>
+  </div>
+
+  <!-- APPLICATION JAVASCRIPT -->
+
+  <script>
+    let networkHistory = [
+      { time: '04:16 PM', score: 98, speed: 92.4, ping: 12 },
+      { time: '05:18 PM', score: 94, speed: 84.1, ping: 15 },
+      { time: '05:22 PM', score: 96, speed: 86.5, ping: 14 },
+      { time: '05:37 PM', score: 99, speed: 104.2, ping: 11 },
+      { time: '05:40 PM', score: 91, speed: 78.9, ping: 18 },
+      { time: '06:10 PM', score: 97, speed: 94.2, ping: 14 }
+    ];
+
+    let chartInstance = null;
+    let mapInstance = null;
+    let userMarker = null;
+    let serverMarkers = [];
+    let routeLine = null;
+
+    // Replace this with your valid MapTiler key.
+    const MAPTILER_API_KEY = 'PASTE_YOUR_MAPTILER_API_KEY_HERE';
+
+    window.addEventListener('load', function() {
+      initChart();
+      initMap();
+      updateConnectivityScore(0);
+    });
+
+    /* ==========================================
+       CONNECTIVITY SCORE DISPLAY
+    ========================================== */
+
+    function updateConnectivityScore(scoreValue) {
+      const safeScore = Math.max(
+        0,
+        Math.min(100, Math.round(Number(scoreValue) || 0))
+      );
+
+      const scoreElement = document.getElementById('score');
+      const statusElement = document.getElementById('status');
+      const statusDot = document.getElementById('networkStatusDot');
+      const progress = document.getElementById('scoreProgress');
+
+      if (scoreElement) {
+        scoreElement.textContent = safeScore;
+      }
+
+      if (progress) {
+        progress.style.width = safeScore + '%';
+      }
+
+      let label = 'Poor';
+      let color = '#DC2626';
+
+      if (safeScore >= 85) {
+        label = 'Excellent';
+        color = '#059669';
+      } else if (safeScore >= 70) {
+        label = 'Good';
+        color = '#0D9488';
+      } else if (safeScore >= 50) {
+        label = 'Average';
+        color = '#D97706';
+      }
+
+      if (statusElement) {
+        statusElement.textContent = label;
+        statusElement.style.color = color;
+
+        statusElement.style.backgroundColor =
+          safeScore >= 85 ? 'rgba(5,150,105,.12)' :
+          safeScore >= 70 ? 'rgba(13,148,136,.12)' :
+          safeScore >= 50 ? 'rgba(217,119,6,.12)' :
+          'rgba(220,38,38,.12)';
+      }
+
+      if (statusDot) {
+        statusDot.style.backgroundColor = color;
+        statusDot.style.boxShadow = '0 0 0 4px ' + (
+          safeScore >= 85 ? 'rgba(5,150,105,.14)' :
+          safeScore >= 70 ? 'rgba(13,148,136,.14)' :
+          safeScore >= 50 ? 'rgba(217,119,6,.14)' :
+          'rgba(220,38,38,.14)'
+        );
+      }
+    }
+
+    /* ==========================================
+       MAP INITIALIZATION
+    ========================================== */
+
+    function initMap() {
+      const mapElement = document.getElementById('connectivity-map');
+
+      if (!mapElement) {
+        console.error('Connectivity map container not found.');
+        return;
+      }
+
+      if (typeof L === 'undefined') {
+        console.error('Leaflet is not loaded.');
+        return;
+      }
+
+      if (mapInstance) {
+        mapInstance.remove();
+        mapInstance = null;
+      }
+
+      serverMarkers = [];
+      userMarker = null;
+      routeLine = null;
+
+      const lat = 19.0760;
+      const lng = 72.8777;
+
+      if (
+        !MAPTILER_API_KEY ||
+        MAPTILER_API_KEY === 'T7nf6Xv8AjTAihJA5Zad'
+      ) {
+        console.error('Please configure a valid MapTiler API key.');
+        return;
+      }
+
+      mapInstance = L.map(mapElement, {
+        zoomControl: true,
+        scrollWheelZoom: true,
+        preferCanvas: true
+      }).setView([lat, lng], 11);
+
+      window.connectivityMap = mapInstance;
+
+      const mapTilerLayer = L.tileLayer(
+        `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${encodeURIComponent(MAPTILER_API_KEY)}`,
+        {
+          tileSize: 512,
+          zoomOffset: -1,
+          minZoom: 1,
+          maxZoom: 20,
+          attribution:
+            '&copy; <a href="https://www.maptiler.com/">MapTiler</a> ' +
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }
+      );
+
+      mapTilerLayer.on('tileerror', function(event) {
+        console.error(
+          'MapTiler tile failed. Verify API key, style access and domain restrictions.',
+          event
+        );
+      });
+
+      mapTilerLayer.addTo(mapInstance);
+
+      const userIcon = L.divIcon({
+        className: 'custom-map-pin',
+        html: `
+          <div style="
+            width:27px;
+            height:27px;
+            border-radius:50%;
+            background:linear-gradient(135deg,#8B5CF6,#EC4899);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:white;
+            border:3px solid white;
+            box-shadow:0 4px 14px rgba(139,92,246,.55);
+            font-size:11px;
+          ">
+            <i class="fa-solid fa-house"></i>
+          </div>
+        `,
+        iconSize: [27, 27],
+        iconAnchor: [13, 13]
+      });
+
+      const serverIcon = L.divIcon({
+        className: 'custom-server-pin',
+        html: `
+          <div style="
+            width:31px;
+            height:31px;
+            border-radius:50%;
+            background:#312e81;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:white;
+            border:3px solid white;
+            box-shadow:0 3px 12px rgba(0,0,0,.35);
+            font-size:12px;
+          ">
+            <i class="fa-solid fa-server"></i>
+          </div>
+        `,
+        iconSize: [31, 31],
+        iconAnchor: [15, 15]
+      });
+
+      userMarker = L.marker(
+        [lat, lng],
+        { icon: userIcon }
+      ).addTo(mapInstance);
+
+      userMarker.bindPopup(`
+        <strong>Your Local Node</strong><br>
+        Mumbai, Maharashtra<br>
+        Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}
+      `);
+
+      const server1 = L.marker(
+        [19.1136, 72.8697],
+        { icon: serverIcon }
+      ).addTo(mapInstance);
+
+      server1.bindPopup(`
+        <strong>AWS South Node</strong><br>
+        <span style="color:#059669">Demo Ping: 8.5 ms</span>
+      `);
+
+      serverMarkers.push(server1);
+
+      const server2 = L.marker(
+        [18.9220, 72.8347],
+        { icon: serverIcon }
+      ).addTo(mapInstance);
+
+      server2.bindPopup(`
+        <strong>Cloudflare CDN Node</strong><br>
+        <span style="color:#059669">Demo Ping: 12.1 ms</span>
+      `);
+
+      serverMarkers.push(server2);
+
+      routeLine = L.polyline(
+        [
+          [lat, lng],
+          [19.1136, 72.8697],
+          [18.9220, 72.8347]
+        ],
+        {
+          color: '#8B5CF6',
+          weight: 3,
+          opacity: 0.85,
+          dashArray: '7, 9',
+          lineCap: 'round'
+        }
+      ).addTo(mapInstance);
+
+      const group = L.featureGroup([
+        userMarker,
+        ...serverMarkers
+      ]);
+
+      mapInstance.fitBounds(group.getBounds(), {
+        padding: [45, 45],
+        maxZoom: 12
+      });
+
+      requestAnimationFrame(() => {
+        if (mapInstance) {
+          mapInstance.invalidateSize(true);
+        }
+      });
+
+      setTimeout(() => {
+        if (mapInstance) {
+          mapInstance.invalidateSize(true);
+        }
+      }, 500);
+
+      if (window.ResizeObserver) {
+        if (window.mapResizeObserver) {
+          window.mapResizeObserver.disconnect();
+        }
+
+        window.mapResizeObserver = new ResizeObserver(() => {
+          if (mapInstance) {
+            mapInstance.invalidateSize();
+          }
+        });
+
+        window.mapResizeObserver.observe(mapElement);
+      }
+
+      console.log('Smart Connectivity Map initialized.');
+    }
+
+    /* ==========================================
+       CHART INITIALIZATION
+    ========================================== */
+
+    function initChart() {
+      const canvas = document.getElementById('networkChart');
+
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+
+      const speedGradient = ctx.createLinearGradient(0, 0, 0, 300);
+      speedGradient.addColorStop(0, 'rgba(236,72,153,0.35)');
+      speedGradient.addColorStop(1, 'rgba(236,72,153,0)');
+
+      const scoreGradient = ctx.createLinearGradient(0, 0, 0, 300);
+      scoreGradient.addColorStop(0, 'rgba(139,92,246,0.35)');
+      scoreGradient.addColorStop(1, 'rgba(139,92,246,0)');
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+
+        data: {
+          labels: networkHistory.map(item => item.time),
+
+          datasets: [
+            {
+              label: 'Connectivity Score',
+              data: networkHistory.map(item => item.score),
+              borderColor: '#8B5CF6',
+              backgroundColor: scoreGradient,
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 4,
+              pointBackgroundColor: '#8B5CF6',
+              yAxisID: 'y'
+            },
+            {
+              label: 'Download Speed (Mbps)',
+              data: networkHistory.map(item => item.speed),
+              borderColor: '#EC4899',
+              backgroundColor: speedGradient,
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 4,
+              pointBackgroundColor: '#EC4899',
+              yAxisID: 'y1'
+            }
+          ]
+        },
+
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: '#1E1B4B',
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+
+            tooltip: {
+              backgroundColor: 'rgba(30,27,75,.9)',
+              padding: 10,
+              cornerRadius: 10
+            }
+          },
+
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#475569' }
+            },
+
+            y: {
+              min: 50,
+              max: 100,
+              position: 'left',
+              ticks: { color: '#475569' }
+            },
+
+            y1: {
+              min: 0,
+              max: 150,
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#475569' }
+            }
+          }
+        }
+      });
+    }
+
+    /* ==========================================
+       NETWORK TEST
+    ========================================== */
+
+    function runNetworkTest() {
+      const btn = document.getElementById('run-test-btn');
+      const btnText = document.getElementById('test-btn-text');
+
+      if (!btn || !btnText) return;
+
+      btn.disabled = true;
+      btnText.innerText = 'Testing...';
+
+      const interval = setInterval(() => {
+        document.getElementById('kpi-download').innerText =
+          (70 + Math.random() * 45).toFixed(1);
+
+        document.getElementById('kpi-upload').innerText =
+          (25 + Math.random() * 20).toFixed(1);
+
+        document.getElementById('kpi-ping').innerText =
+          Math.floor(10 + Math.random() * 10);
+
+        document.getElementById('kpi-jitter').innerText =
+          (1 + Math.random() * 2).toFixed(1);
+      }, 300);
+
+      setTimeout(() => {
+        clearInterval(interval);
+
+        const finalSpeed = (85 + Math.random() * 35).toFixed(1);
+        const finalPing = Math.floor(11 + Math.random() * 8);
+        const finalScore = Math.floor(92 + Math.random() * 7);
+
+        updateConnectivityScore(finalScore);
+
+        const currentTime = new Date().toLocaleTimeString(
+          [],
+          {
+            hour: '2-digit',
+            minute: '2-digit'
+          }
+        );
+
+        document.getElementById('kpi-download').innerText = finalSpeed;
+        document.getElementById('kpi-ping').innerText = finalPing;
+
+        networkHistory.push({
+          time: currentTime,
+          score: finalScore,
+          speed: parseFloat(finalSpeed),
+          ping: finalPing
+        });
+
+        if (networkHistory.length > 20) {
+          networkHistory.shift();
+        }
+
+        if (chartInstance) {
+          chartInstance.data.labels =
+            networkHistory.map(item => item.time);
+
+          chartInstance.data.datasets[0].data =
+            networkHistory.map(item => item.score);
+
+          chartInstance.data.datasets[1].data =
+            networkHistory.map(item => item.speed);
+
+          chartInstance.update();
+        }
+
+        btn.disabled = false;
+        btnText.innerText = 'Run Test';
+
+        showToast('Network test completed successfully!');
+      }, 2000);
+    }
+
+    /* ==========================================
+       CSV EXPORT
+    ========================================== */
+
+    function exportHistoryCSV() {
+      if (!networkHistory.length) {
+        showToast('No history data available.');
+        return;
+      }
+
+      let csvContent =
+        'Time,Connectivity Score,Download Speed (Mbps),Ping (ms)\n';
+
+      networkHistory.forEach(row => {
+        csvContent +=
+          `${row.time},${row.score},${row.speed},${row.ping}\n`;
+      });
+
+      const blob = new Blob(
+        [csvContent],
+        { type: 'text/csv;charset=utf-8;' }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download =
+        `network_history_${new Date().toISOString().slice(0, 10)}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+
+      showToast('CSV downloaded successfully!');
+    }
+
+    /* ==========================================
+       CHART RANGE
+    ========================================== */
+
+    function updateChartRange(val) {
+      if (!chartInstance) return;
+
+      showToast(`Filter range updated to: ${val}`);
+
+      const limit = val === 'recent' ? 6 :
+                    val === '1h' ? 10 :
+                    val === '24h' ? 15 : 20;
+
+      const data = networkHistory.slice(-limit);
+
+      chartInstance.data.labels =
+        data.map(item => item.time);
+
+      chartInstance.data.datasets[0].data =
+        data.map(item => item.score);
+
+      chartInstance.data.datasets[1].data =
+        data.map(item => item.speed);
+
+      chartInstance.update();
+    }
+
+    /* ==========================================
+       LOCATION DETECTION
+    ========================================== */
+
+    function detectCurrentLocation() {
+      if (!navigator.geolocation) {
+        showToast('Geolocation is not supported.');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          if (mapInstance) {
+            mapInstance.setView([lat, lng], 15);
+
+            if (userMarker) {
+              userMarker.setLatLng([lat, lng]);
+            }
+          }
+
+          showToast('Your location detected successfully!');
+        },
+
+        error => {
+          console.error('Location error:', error);
+          showToast('Unable to detect location. Check permissions.');
+        },
+
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    /* ==========================================
+       TOAST NOTIFICATION
+    ========================================== */
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const message = document.getElementById('toast-message');
+
+      if (!toast || !message) return;
+
+      message.innerText = msg;
+
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+  </script>
 
 </body>
-
 </html>

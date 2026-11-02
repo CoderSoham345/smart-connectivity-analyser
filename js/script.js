@@ -1100,34 +1100,114 @@ function updateSessionStatistics() {
 }
 
 
-/* =========================================================
-   MAP INITIALIZATION & AUTO-RESIZE
-   ========================================================= */
+
 
 function initializeMap() {
-    const mapElement = $("connectivityMap");
+    const mapElement = getElement(
+        "connectivityMap",
+        "connectivity-map"
+    );
 
     if (!mapElement) {
+        console.error("Connectivity map container not found.");
         return;
     }
 
     if (typeof L === "undefined") {
-        console.warn("Leaflet is not loaded.");
+        console.error("Leaflet is not loaded.");
         return;
     }
 
-    connectivityMap = L.map(mapElement).setView([18.5204, 73.8567], 10);
+    if (connectivityMap) {
+        connectivityMap.remove();
+        connectivityMap = null;
+    }
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors"
-    }).addTo(connectivityMap);
+    const defaultLat = 19.0760;
+    const defaultLng = 72.8777;
 
-    // Guarantee map tile rendering across desktop & mobile viewports
-    setTimeout(() => {
-        if (connectivityMap) {
-            connectivityMap.invalidateSize();
+    connectivityMap = L.map(mapElement, {
+        center: [defaultLat, defaultLng],
+        zoom: 12,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        preferCanvas: true
+    });
+
+    window.connectivityMap = connectivityMap;
+
+    // Use your valid key from a secure configuration.
+    const MAPTILER_API_KEY = "T7nf6Xv8AjTAihJA5Zad";
+
+    L.tileLayer(
+        `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${encodeURIComponent(MAPTILER_API_KEY)}`,
+        {
+            tileSize: 512,
+            zoomOffset: -1,
+            minZoom: 1,
+            maxZoom: 20,
+            attribution:
+                '&copy; <a href="https://www.maptiler.com/">MapTiler</a> ' +
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }
-    }, 300);
+    ).addTo(connectivityMap);
+
+    requestAnimationFrame(() => {
+        connectivityMap?.invalidateSize(true);
+    });
+
+    setTimeout(() => {
+        connectivityMap?.invalidateSize(true);
+    }, 500);
+
+    if (window.ResizeObserver) {
+        if (window.mapResizeObserver) {
+            window.mapResizeObserver.disconnect();
+        }
+
+        window.mapResizeObserver = new ResizeObserver(() => {
+            connectivityMap?.invalidateSize();
+        });
+
+        window.mapResizeObserver.observe(mapElement);
+    }
+
+    console.log("Connectivity map initialized.");
+}
+
+/* =========================================================
+   SCORE & STATUS LOGIC
+   Uses connectivity-score.js
+   ========================================================= */
+
+function updateConnectivityScore() {
+
+    if (
+        typeof calculateConnectivityScore !== "function" ||
+        typeof getConnectivityStatus !== "function"
+    ) {
+        console.error("Connectivity score module not loaded.");
+        setText("score", "--");
+        setText("status", "Score unavailable");
+        return;
+    }
+
+    currentMetrics.score =
+        calculateConnectivityScore(currentMetrics);
+
+    setText("score", currentMetrics.score);
+
+    const status =
+        getConnectivityStatus(currentMetrics.score);
+
+    setText("status", status);
+
+    const dot = $("networkStatusDot");
+
+    if (dot) {
+        dot.className = "status-dot";
+        dot.classList.add(status.toLowerCase());
+    }
 }
 
 
@@ -1512,8 +1592,40 @@ async function exportHistoryToCSV() {
         alert("An error occurred while exporting network history.");
     }
 }
+function initializeMap() {
+    const mapElement = document.getElementById("connectivityMap") || document.getElementById("connectivity-map");
+    if (!mapElement || typeof L === "undefined") return;
 
+    // Reset container if initialized already
+    if (window.connectivityMap && window.connectivityMap.remove) {
+        window.connectivityMap.remove();
+    }
 
+    const defaultLat = 19.0760;
+    const defaultLng = 72.8777;
+
+    const map = L.map(mapElement).setView([defaultLat, defaultLng], 12);
+    window.connectivityMap = map;
+
+    // MapTiler Dataviz Dark Endpoint
+    const mapTilerKey = "efcVy0V2raBeyGPbPTEws";
+    
+    L.tileLayer(`https://api.maptiler.com/maps/dataviz-dark/{z}/{x}/{y}.png?key=${mapTilerKey}`, {
+        tileSize: 512,
+        zoomOffset: -1,
+        minZoom: 1,
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        crossOrigin: true
+    }).addTo(map);
+
+    // Guarantee size recalculation across responsive viewports
+    setTimeout(() => {
+        if (map) {
+            map.invalidateSize();
+        }
+    }, 300);
+}
 /* =========================================================
    GLOBAL EXPORTS & ABSTRACTIONS
    ========================================================= */
