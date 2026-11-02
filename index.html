@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -21,20 +22,15 @@
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-
 <body>
 
-    <!-- =====================================================
-         NAVIGATION
-    ====================================================== -->
+    <!-- NAVIGATION -->
 
     <header class="topbar">
 
@@ -51,27 +47,17 @@
 
         </div>
 
-
         <nav class="nav-links">
 
-            <a href="#dashboard">
-                Dashboard
-            </a>
+            <a href="#dashboard">Dashboard</a>
 
-            <a href="#history">
-                History
-            </a>
+            <a href="#history">History</a>
 
-            <a href="#applications">
-                Applications
-            </a>
+            <a href="#applications">Applications</a>
 
-            <a href="#location">
-                Location
-            </a>
+            <a href="#location">Location</a>
 
         </nav>
-
 
         <button
             id="menuButton"
@@ -83,16 +69,12 @@
     </header>
 
 
-    <!-- =====================================================
-         MAIN
-    ====================================================== -->
+    <!-- MAIN -->
 
     <main class="container">
 
 
-        <!-- =================================================
-             HERO
-        ================================================== -->
+        <!-- HERO -->
 
         <section
             id="dashboard"
@@ -115,7 +97,6 @@
                     detect problems and understand your Internet
                     performance in real time.
                 </p>
-
 
                 <button
                     id="startTest"
@@ -151,7 +132,6 @@
 
                 </div>
 
-
                 <div
                     id="score"
                     class="score-number"
@@ -159,11 +139,9 @@
                     0
                 </div>
 
-
                 <div class="score-out-of">
                     /100
                 </div>
-
 
                 <div
                     id="status"
@@ -173,30 +151,68 @@
                 </div>
 
                 <details class="score-help">
-                    <summary>How is this calculated?</summary>
+
+                    <summary>
+                        How is this calculated?
+                    </summary>
+
                     <div class="score-help-content">
-                        <p>Your score is calculated using five network metrics: Download speed, Upload speed, Ping, Jitter, and Packet loss.</p>
+
+                        <p>
+                            Your score is calculated using five network
+                            metrics: Download speed, Upload speed,
+                            Ping, Jitter, and Packet loss.
+                        </p>
+
                     </div>
+
                 </details>
 
                 <details class="score-help">
-                    <summary>Connectivity Score Guide</summary>
+
+                    <summary>
+                        Connectivity Score Guide
+                    </summary>
+
                     <div class="score-help-content">
+
                         <table>
+
                             <thead>
                                 <tr>
                                     <th scope="col">Score</th>
                                     <th scope="col">Rating</th>
                                 </tr>
                             </thead>
+
                             <tbody>
-                                <tr><td>&ge; 85</td><td class="rating-excellent">Excellent</td></tr>
-                                <tr><td>&ge; 70</td><td class="rating-good">Good</td></tr>
-                                <tr><td>&ge; 50</td><td class="rating-average">Average</td></tr>
-                                <tr><td>&lt; 50</td><td class="rating-poor">Poor</td></tr>
+
+                                <tr>
+                                    <td>&ge; 85</td>
+                                    <td class="rating-excellent">Excellent</td>
+                                </tr>
+
+                                <tr>
+                                    <td>&ge; 70</td>
+                                    <td class="rating-good">Good</td>
+                                </tr>
+
+                                <tr>
+                                    <td>&ge; 50</td>
+                                    <td class="rating-average">Average</td>
+                                </tr>
+
+                                <tr>
+                                    <td>&lt; 50</td>
+                                    <td class="rating-poor">Poor</td>
+                                </tr>
+
                             </tbody>
+
                         </table>
+
                     </div>
+
                 </details>
 
             </div>
@@ -204,32 +220,22 @@
         </section>
 
 
-
-        <!-- =================================================
-             NETWORK METRICS
-        ================================================== -->
+        <!-- NETWORK METRICS -->
 
         <section class="metrics-grid">
-
 
             <!-- Download -->
 
             <div class="metric-card">
 
-                <div class="metric-icon">
-                    ↓
-                </div>
+                <div class="metric-icon">↓</div>
 
                 <div>
-
-                    <span>
-                        Download
-                    </span>
+                    <span>Download</span>
 
                     <strong id="download">
                         0 Mbps
                     </strong>
-
                 </div>
 
             </div>
@@ -239,20 +245,14 @@
 
             <div class="metric-card">
 
-                <div class="metric-icon">
-                    ↑
-                </div>
+                <div class="metric-icon">↑</div>
 
                 <div>
-
-                    <span>
-                        Upload
-                    </span>
+                    <span>Upload</span>
 
                     <strong id="upload">
                         0 Mbps
                     </strong>
-
                 </div>
 
             </div>
@@ -262,20 +262,14 @@
 
             <div class="metric-card">
 
-                <div class="metric-icon">
-                    ◉
-                </div>
+                <div class="metric-icon">◉</div>
 
                 <div>
-
-                    <span>
-                        Ping
-                    </span>
+                    <span>Ping</span>
 
                     <strong id="ping">
                         0 ms
                     </strong>
-
                 </div>
 
             </div>
@@ -285,20 +279,14 @@
 
             <div class="metric-card">
 
-                <div class="metric-icon">
-                    ≋
-                </div>
+                <div class="metric-icon">≋</div>
 
                 <div>
-
-                    <span>
-                        Jitter
-                    </span>
+                    <span>Jitter</span>
 
                     <strong id="jitter">
                         0 ms
                     </strong>
-
                 </div>
 
             </div>
@@ -308,20 +296,14 @@
 
             <div class="metric-card">
 
-                <div class="metric-icon">
-                    %
-                </div>
+                <div class="metric-icon">%</div>
 
                 <div>
-
-                    <span>
-                        Packet Loss
-                    </span>
+                    <span>Packet Loss</span>
 
                     <strong id="packetLoss">
                         0%
                     </strong>
-
                 </div>
 
             </div>
@@ -331,20 +313,14 @@
 
             <div class="metric-card">
 
-                <div class="metric-icon">
-                    📶
-                </div>
+                <div class="metric-icon">📶</div>
 
                 <div>
-
-                    <span>
-                        Network Type
-                    </span>
+                    <span>Network Type</span>
 
                     <strong id="networkType">
                         Checking...
                     </strong>
-
                 </div>
 
             </div>
@@ -352,16 +328,12 @@
         </section>
 
 
-
-        <!-- =================================================
-             HISTORY + SESSION
-        ================================================== -->
+        <!-- HISTORY + SESSION -->
 
         <section
             id="history"
             class="two-column"
         >
-
 
             <!-- Network History -->
 
@@ -381,10 +353,8 @@
 
                     </div>
 
-
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
 
-                        <!-- Export CSV Button -->
                         <button
                             id="exportCsvBtn"
                             class="secondary-button"
@@ -409,36 +379,45 @@
 
                 </div>
 
+                <!-- Single chart container -->
 
                 <div class="chart-container">
-                    <div class="chart-container">
-    <div class="chart-header-stats flex justify-between items-center mb-3 text-xs text-gray-400">
-      <div class="flex gap-4">
-        <span class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-          <span>Score (0-100)</span>
-        </span>
-        <span class="flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-pink-500 inline-block"></span>
-          <span>Speed (Mbps)</span>
-        </span>
-      </div>
-      <span class="text-gray-500">Hover graph points for details</span>
-    </div>
 
-    <canvas
-        id="networkChart">
-    </canvas>
-</div>
+                    <div class="chart-header-stats flex justify-between items-center mb-3 text-xs text-gray-400">
 
-                    <canvas
-                        id="networkChart">
-                    </canvas>
+                        <div class="flex gap-4">
+
+                            <span class="flex items-center gap-1.5">
+
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+
+                                <span>Score (0-100)</span>
+
+                            </span>
+
+                            <span class="flex items-center gap-1.5">
+
+                                <span class="w-2.5 h-2.5 rounded-full bg-pink-500 inline-block"></span>
+
+                                <span>Speed (Mbps)</span>
+
+                            </span>
+
+                        </div>
+
+                        <span class="text-gray-500">
+                            Hover graph points for details
+                        </span>
+
+                    </div>
+
+                    <!-- Do not rename this canvas ID -->
+
+                    <canvas id="networkChart"></canvas>
 
                 </div>
 
             </div>
-
 
 
             <!-- Session Statistics -->
@@ -461,15 +440,11 @@
 
                 </div>
 
-
                 <div class="statistics-list">
-
 
                     <div class="stat-row">
 
-                        <span>
-                            Session Duration
-                        </span>
+                        <span>Session Duration</span>
 
                         <strong id="sessionTime">
                             00:00:00
@@ -477,12 +452,9 @@
 
                     </div>
 
-
                     <div class="stat-row">
 
-                        <span>
-                            Average Speed
-                        </span>
+                        <span>Average Speed</span>
 
                         <strong id="averageSpeed">
                             0 Mbps
@@ -490,12 +462,9 @@
 
                     </div>
 
-
                     <div class="stat-row">
 
-                        <span>
-                            Average Ping
-                        </span>
+                        <span>Average Ping</span>
 
                         <strong id="averagePing">
                             0 ms
@@ -503,12 +472,9 @@
 
                     </div>
 
-
                     <div class="stat-row">
 
-                        <span>
-                            Peak Speed
-                        </span>
+                        <span>Peak Speed</span>
 
                         <strong id="peakSpeed">
                             0 Mbps
@@ -516,12 +482,9 @@
 
                     </div>
 
-
                     <div class="stat-row">
 
-                        <span>
-                            Downtime
-                        </span>
+                        <span>Downtime</span>
 
                         <strong id="downtime">
                             0 min
@@ -536,21 +499,15 @@
         </section>
 
 
-
-        <!-- =================================================
-             AI FEATURES
-        ================================================== -->
+        <!-- AI FEATURES -->
 
         <section class="ai-grid">
-
 
             <!-- Prediction -->
 
             <div class="ai-card prediction-card">
 
-                <div class="ai-icon">
-                    🧠
-                </div>
+                <div class="ai-icon">🧠</div>
 
                 <div>
 
@@ -582,9 +539,7 @@
 
             <div class="ai-card anomaly-card">
 
-                <div class="ai-icon">
-                    🔍
-                </div>
+                <div class="ai-icon">🔍</div>
 
                 <div>
 
@@ -614,10 +569,7 @@
         </section>
 
 
-
-        <!-- =================================================
-             APPLICATION READINESS
-        ================================================== -->
+        <!-- APPLICATION READINESS -->
 
         <section
             id="applications"
@@ -641,7 +593,6 @@
 
             </div>
 
-
             <div class="application-grid">
 
 
@@ -651,9 +602,7 @@
 
                     <div class="application-top">
 
-                        <span class="application-icon">
-                            🎮
-                        </span>
+                        <span class="application-icon">🎮</span>
 
                         <span
                             id="gamingScore"
@@ -664,9 +613,7 @@
 
                     </div>
 
-                    <h3>
-                        Gaming
-                    </h3>
+                    <h3>Gaming</h3>
 
                     <div class="progress-bar">
 
@@ -684,16 +631,13 @@
                 </div>
 
 
-
                 <!-- Video Call -->
 
                 <div class="application-card">
 
                     <div class="application-top">
 
-                        <span class="application-icon">
-                            📹
-                        </span>
+                        <span class="application-icon">📹</span>
 
                         <span
                             id="videoCallScore"
@@ -704,9 +648,7 @@
 
                     </div>
 
-                    <h3>
-                        Video Call
-                    </h3>
+                    <h3>Video Call</h3>
 
                     <div class="progress-bar">
 
@@ -724,16 +666,13 @@
                 </div>
 
 
-
                 <!-- Streaming -->
 
                 <div class="application-card">
 
                     <div class="application-top">
 
-                        <span class="application-icon">
-                            🎬
-                        </span>
+                        <span class="application-icon">🎬</span>
 
                         <span
                             id="streamingScore"
@@ -744,9 +683,7 @@
 
                     </div>
 
-                    <h3>
-                        Streaming
-                    </h3>
+                    <h3>Streaming</h3>
 
                     <div class="progress-bar">
 
@@ -764,16 +701,13 @@
                 </div>
 
 
-
                 <!-- Browsing -->
 
                 <div class="application-card">
 
                     <div class="application-top">
 
-                        <span class="application-icon">
-                            🌐
-                        </span>
+                        <span class="application-icon">🌐</span>
 
                         <span
                             id="browsingScore"
@@ -784,9 +718,7 @@
 
                     </div>
 
-                    <h3>
-                        Browsing
-                    </h3>
+                    <h3>Browsing</h3>
 
                     <div class="progress-bar">
 
@@ -808,18 +740,13 @@
         </section>
 
 
-
-        <!-- =================================================
-             SMART DIAGNOSIS
-        ================================================== -->
+        <!-- SMART DIAGNOSIS -->
 
         <section class="diagnosis-section">
 
             <div class="diagnosis-card">
 
-                <div class="diagnosis-icon">
-                    💡
-                </div>
+                <div class="diagnosis-icon">💡</div>
 
                 <div>
 
@@ -843,10 +770,7 @@
         </section>
 
 
-
-        <!-- =================================================
-             LOCATION
-        ================================================== -->
+        <!-- LOCATION -->
 
         <section
             id="location"
@@ -870,7 +794,6 @@
 
             </div>
 
-
             <div class="location-grid">
 
 
@@ -882,7 +805,6 @@
                         id="connectivityMap"
                         class="map"
                     ></div>
-
 
                     <div class="map-legend">
 
@@ -906,7 +828,6 @@
                 </div>
 
 
-
                 <!-- Location Control -->
 
                 <div class="panel location-control">
@@ -925,14 +846,12 @@
                         connectivity map.
                     </p>
 
-
                     <button
                         id="detectLocation"
                         class="primary-button full-width"
                     >
                         📍 Detect My Location
                     </button>
-
 
                     <button
                         id="saveLocation"
@@ -941,14 +860,12 @@
                         + Save Network Point
                     </button>
 
-
                     <button
                         id="findBetterArea"
                         class="secondary-button full-width"
                     >
                         🧭 Find Better Network Area
                     </button>
-
 
                     <div
                         id="locationResult"
@@ -957,12 +874,10 @@
                         Location not detected.
                     </div>
 
-
                     <div
                         id="navigationResult"
                         class="navigation-result"
-                    >
-                    </div>
+                    ></div>
 
                 </div>
 
@@ -970,15 +885,10 @@
 
         </section>
 
-
-
     </main>
 
 
-
-    <!-- =====================================================
-         FOOTER
-    ====================================================== -->
+    <!-- FOOTER -->
 
     <footer>
 
@@ -994,6 +904,7 @@
 
 
     <!-- JavaScript -->
+
     <script src="js/connectivity-score.js"></script>
     <script src="js/script.js"></script>
 
