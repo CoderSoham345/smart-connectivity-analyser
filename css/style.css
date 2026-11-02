@@ -274,7 +274,7 @@ a {
 
     grid-template-columns:
         1fr
-        300px;
+        340px;
 
     gap: 40px;
 
@@ -506,7 +506,7 @@ a {
 
     color: var(--text-secondary);
 
-    font-size: 13px;
+    font-size: 12px;
 }
 
 
@@ -567,6 +567,171 @@ a {
     font-weight: 700;
 
     color: var(--text-secondary);
+}
+
+
+.hero-section:has(.score-help[open]) {
+
+    align-items: start;
+}
+
+
+.score-help {
+
+    margin-top: 6px;
+
+    padding-top: 4px;
+
+    border-top:
+        1px solid
+        var(--border);
+
+    color: var(--text-secondary);
+
+    font-size: 11px;
+
+    text-align: left;
+}
+
+
+.score-help summary {
+
+    color: var(--text);
+
+    cursor: pointer;
+
+    font-weight: 600;
+
+    line-height: 1.2;
+}
+
+
+.score-help summary:focus-visible {
+
+    outline:
+        2px solid
+        var(--cyan);
+
+    outline-offset: 4px;
+}
+
+
+.score-help-content {
+
+    padding-top: 2px;
+}
+
+
+.score-help-content p {
+
+    margin-bottom: 3px;
+
+    line-height: 1.2;
+}
+
+
+.score-help-content hr {
+
+    margin:
+        6px
+        0;
+
+    border: 0;
+
+    border-top:
+        1px solid
+        var(--border);
+}
+
+
+.score-help-content h3 {
+
+    margin:
+        6px
+        0
+        3px;
+
+    color: var(--text);
+
+    font-size: 10px;
+}
+
+
+.score-help-content h3:first-child {
+
+    margin-top: 0;
+}
+
+
+.score-help-content table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 11px;
+
+    line-height: 1.2;
+}
+
+
+.score-help-content th,
+.score-help-content td {
+
+    padding:
+        3px
+        3px;
+
+    border-bottom:
+        1px solid
+        var(--border);
+}
+
+
+.score-help-content th {
+
+    color: var(--text);
+
+    font-weight: 700;
+
+    text-align: left;
+}
+
+
+.score-help-content th:last-child,
+.score-help-content td:last-child {
+
+    text-align: right;
+}
+
+
+.score-help-content tbody tr:last-child td {
+
+    border-bottom: 0;
+}
+
+
+.score-help-content .rating-excellent {
+
+    color: var(--green);
+}
+
+
+.score-help-content .rating-good {
+
+    color: #60a5fa;
+}
+
+
+.score-help-content .rating-average {
+
+    color: #fbbf24;
+}
+
+
+.score-help-content .rating-poor {
+
+    color: #f87171;
 }
 
 
@@ -1562,7 +1727,7 @@ footer p {
 
         grid-template-columns:
             1fr
-            270px;
+            300px;
     }
 }
 

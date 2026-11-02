@@ -1,11 +1,21 @@
 from fastapi import FastAPI, HTTPException
 
+from fastapi.encoders import jsonable_encoder
+
+from fastapi.exceptions import RequestValidationError
+
 from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from pydantic import BaseModel
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from pathlib import Path
 
@@ -88,6 +98,35 @@ app.add_middleware(
     allow_headers=["*"],
 
 )
+
+
+
+# ============================================================
+# VALIDATION ERRORS
+# ============================================================
+
+def make_json_safe(value):
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+
+    if isinstance(value, dict):
+        return {key: make_json_safe(item) for key, item in value.items()}
+
+    if isinstance(value, list):
+        return [make_json_safe(item) for item in value]
+
+    return value
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    # Same response as FastAPI's default handler. Rejected NaN or
+    # Infinity inputs are echoed as strings, since they cannot be
+    # encoded as JSON and would otherwise cause a 500 error.
+    return JSONResponse(
+        status_code=422,
+        content={"detail": make_json_safe(jsonable_encoder(exc.errors()))},
+    )
 
 
 
@@ -340,7 +379,21 @@ AI_MODELS_READY, AI_MODELS_MESSAGE = load_ai_models()
 
 
 
+MEASUREMENT_FIELDS = (
+    "download_mbps",
+    "upload_mbps",
+    "ping_ms",
+    "jitter_ms",
+    "packet_loss",
+    "connectivity_score",
+)
+
+
 class NetworkTest(BaseModel):
+
+    # Reject NaN and Infinity. They cannot be stored or returned
+    # as valid JSON, and would break /api/network-history.
+    model_config = ConfigDict(allow_inf_nan=False)
 
 
 
@@ -348,39 +401,89 @@ class NetworkTest(BaseModel):
 
 
 
-    download_mbps: float | None = None
+    download_mbps: float | None = Field(default=None, ge=0)
 
 
 
-    upload_mbps: float | None = None
+    upload_mbps: float | None = Field(default=None, ge=0)
 
 
 
-    ping_ms: float | None = None
+    ping_ms: float | None = Field(default=None, ge=0)
 
 
 
-    jitter_ms: float | None = None
+    jitter_ms: float | None = Field(default=None, ge=0)
 
 
 
-    packet_loss: float | None = None
+    packet_loss: float | None = Field(default=None, ge=0, le=100)
 
 
 
-    network_type: str | None = "Unknown"
+    network_type: str | None = Field(default="Unknown", max_length=50)
 
 
 
-    connectivity_score: float | None = None
+    connectivity_score: float | None = Field(default=None, ge=0, le=100)
 
 
 
-    latitude: float | None = None
+    latitude: float | None = Field(default=None, ge=-90, le=90)
 
 
 
-    longitude: float | None = None
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+
+
+
+    # Pydantic would otherwise store true/false as 1.0/0.0.
+    @field_validator(
+        *MEASUREMENT_FIELDS,
+        "latitude",
+        "longitude",
+        mode="before",
+    )
+    @classmethod
+    def reject_boolean_values(cls, value):
+        if isinstance(value, bool):
+            raise ValueError("Input should be a number, not a boolean")
+
+        return value
+
+
+    @field_validator("timestamp")
+    @classmethod
+    def validate_timestamp(cls, value):
+        if value is None or not value.strip():
+            return None
+
+        try:
+            # Python < 3.11 does not accept a trailing "Z".
+            datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            raise ValueError(
+                "timestamp must be an ISO 8601 date-time string"
+            )
+
+        # Keep the original string so stored values are unchanged.
+        return value
+
+
+    @model_validator(mode="after")
+    def validate_record(self):
+        if all(getattr(self, field) is None for field in MEASUREMENT_FIELDS):
+            raise ValueError(
+                "At least one network measurement is required: "
+                + ", ".join(MEASUREMENT_FIELDS)
+            )
+
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError(
+                "latitude and longitude must be provided together"
+            )
+
+        return self
 
 
 
