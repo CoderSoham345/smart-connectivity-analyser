@@ -172,6 +172,33 @@
                     Not Connected
                 </div>
 
+                <details class="score-help">
+                    <summary>How is this calculated?</summary>
+                    <div class="score-help-content">
+                        <p>Your score is calculated using five network metrics: Download speed, Upload speed, Ping, Jitter, and Packet loss.</p>
+                    </div>
+                </details>
+
+                <details class="score-help">
+                    <summary>Connectivity Score Guide</summary>
+                    <div class="score-help-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Score</th>
+                                    <th scope="col">Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>&ge; 85</td><td class="rating-excellent">Excellent</td></tr>
+                                <tr><td>&ge; 70</td><td class="rating-good">Good</td></tr>
+                                <tr><td>&ge; 50</td><td class="rating-average">Average</td></tr>
+                                <tr><td>&lt; 50</td><td class="rating-poor">Poor</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+
             </div>
 
         </section>
@@ -1000,6 +1027,7 @@
 
 
     <!-- JavaScript -->
+    <script src="js/connectivity-score.js"></script>
     <script src="js/script.js"></script>
 
 </body>

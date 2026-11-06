@@ -193,6 +193,15 @@ Make sure the frontend's API configuration points to the local FastAPI backend. 
 
 For request schemas and interactive endpoint testing, open `/docs` while the local backend is running.
 
+`POST /api/network-test` validates its input and returns `422` with details for invalid requests:
+
+- At least one measurement (`download_mbps`, `upload_mbps`, `ping_ms`, `jitter_ms`, `packet_loss`, `connectivity_score`) is required. Any unavailable measurement may be `null`.
+- Speeds, ping, and jitter must not be negative. `packet_loss` and `connectivity_score` must be between 0 and 100.
+- `NaN`, `Infinity`, and boolean values are rejected.
+- `timestamp` must be an ISO 8601 date-time. If it is omitted, the server time is used.
+- `latitude` (-90 to 90) and `longitude` (-180 to 180) must be provided together.
+- `network_type` is limited to 50 characters.
+
 > ⚠️ **Caution:** The history deletion endpoint can permanently remove saved network history. Use it only when you intentionally want to clear the records.
 
 ## 🤖 AI Components
@@ -209,6 +218,13 @@ The detector has not yet been fully validated against labelled normal and anomal
 
 ## 🧪 Testing and Verification
 
+Run the automated API tests:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest tests
+```
+
 Before submitting a change, where applicable:
 
 - Start the backend and check `/api/health`.
@@ -218,7 +234,57 @@ Before submitting a change, where applicable:
 - Confirm that unavailable measurements are not silently treated as real zero values.
 - Check browser developer tools and backend output for errors.
 
+### Running Automated Tests
+
+#### Frontend Network Metric Formatting Tests
+
+The repository includes test suites verifying that:
+- Supported network metrics (download, upload, ping, jitter, packet loss) format correctly with units.
+- Missing or unavailable values (`null`, `undefined`, `NaN`, empty strings) are consistently rendered as `"Unavailable"` or `"--"`.
+- Valid zero values (e.g. `0.0 Mbps`, `0.0 ms`, and `0.0 %` packet loss) are displayed correctly.
+- Unavailable values are never incorrectly displayed as zero.
+
+To run the frontend test suite:
+
+```bash
+npm test
+```
+
+Alternatively, run Node's built-in test runner directly:
+
+```bash
+node --test
+```
+
+Or run the specific test file:
+
+```bash
+node tests/metric_formatting.test.js
+```
+
+You can also run the suite using pytest:
+
+```bash
+pytest tests/test_frontend_metric_formatting.py
+```
+
 For research or performance claims, evaluate models using a reproducible test split and compare them with suitable baseline methods. Report the metrics actually obtained; do not claim accuracy or anomaly-detection performance that has not been demonstrated.
+
+### Running Tests
+
+The connectivity score calculation (`js/connectivity-score.js`) has automated tests that use Node's built-in test runner, so no packages need to be installed. Node.js 18 or newer is required.
+
+From the project root:
+
+```bash
+node --test tests/
+```
+
+On Node.js 22 or newer, pass the test file instead, because the directory form is not supported:
+
+```bash
+node --test tests/connectivity-score.test.js
+```
 
 ## 📁 Project Structure
 
@@ -237,8 +303,13 @@ smart-connectivity-analyser/
 │   ├── network-history.png
 │   ├── connectivity-map.png
 │   └── ai-analysis.png
+├── tests/
+│   ├── metric_formatting.test.js
+│   └── test_frontend_metric_formatting.py
 ├── index.html
+├── package.json
 ├── requirements.txt
+├── requirements-dev.txt
 ├── README.md
 └── CONTRIBUTING.md
 ```

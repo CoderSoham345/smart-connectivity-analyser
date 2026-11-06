@@ -37,6 +37,9 @@ let currentMetrics = {
    ========================================================= */
 
 function $(id) {
+    if (typeof document === "undefined") {
+        return null;
+    }
     return document.getElementById(id);
 }
 
@@ -63,29 +66,79 @@ function setProgress(id, value) {
     element.style.width = `${safeValue}%`;
 }
 
-function formatNumber(value, decimals = 1) {
+function isValidMetricNumber(value) {
     if (
         value === null ||
         value === undefined ||
-        !Number.isFinite(Number(value))
+        value === "" ||
+        typeof value === "boolean" ||
+        typeof value === "object" ||
+        (typeof value === "string" && value.trim() === "")
     ) {
+        return false;
+    }
+
+    return Number.isFinite(Number(value));
+}
+
+function formatNumber(value, decimals = 1) {
+    if (!isValidMetricNumber(value)) {
         return "--";
     }
 
     return Number(value).toFixed(decimals);
 }
 
+const METRIC_UNITS = {
+    download: "Mbps",
+    download_mbps: "Mbps",
+    upload: "Mbps",
+    upload_mbps: "Mbps",
+    ping: "ms",
+    ping_ms: "ms",
+    jitter: "ms",
+    jitter_ms: "ms",
+    packetLoss: "%",
+    packet_loss: "%"
+};
+
+function formatMetric(value, unit = "", decimals = 1) {
+    if (!isValidMetricNumber(value)) {
+        return "Unavailable";
+    }
+
+    const formatted = Number(value).toFixed(decimals);
+    return unit ? `${formatted} ${unit}` : formatted;
+}
+
+function formatNetworkMetric(metricType, value, decimals = 1) {
+    const unit = METRIC_UNITS[metricType] !== undefined ? METRIC_UNITS[metricType] : "";
+    return formatMetric(value, unit, decimals);
+}
+
+let applicationInitialized = false;
 
 /* =========================================================
    INITIALIZATION
    ========================================================= */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    initializeApplication
-);
+if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeApplication,
+            { once: true }
+        );
+    } else {
+        initializeApplication();
+    }
+}
 
 async function initializeApplication() {
+    if (applicationInitialized) {
+        return;
+    }
+    applicationInitialized = true;
 
     setupButtons();
 
@@ -514,9 +567,15 @@ async function runBackendNetworkQualityTest() {
         // Store the latest backend response.
         backendQuality = data;
 
-        currentMetrics.ping = data.ping_ms;
-        currentMetrics.jitter = data.jitter_ms;
-        currentMetrics.packetLoss = data.packet_loss;
+        currentMetrics.ping = isValidMetricNumber(data.ping_ms)
+            ? Number(data.ping_ms)
+            : null;
+        currentMetrics.jitter = isValidMetricNumber(data.jitter_ms)
+            ? Number(data.jitter_ms)
+            : null;
+        currentMetrics.packetLoss = isValidMetricNumber(data.packet_loss)
+            ? Number(data.packet_loss)
+            : null;
 
         // Diagnostic: inspect the actual API and stored values.
         console.log("PACKET LOSS TRACE:", {
@@ -526,40 +585,23 @@ async function runBackendNetworkQualityTest() {
             packetsReceived: data.packets_received
         });
 
-        // Update ping.
-        if (data.ping_ms !== null &&
-            data.ping_ms !== undefined) {
-            setText(
-                "ping",
-                `${formatNumber(data.ping_ms)} ms`
-            );
-        } else {
-            setText("ping", "Unavailable");
-        }
+        // Update ping, jitter, and packet loss
+        setText(
+            "ping",
+            formatNetworkMetric("ping", data.ping_ms)
+        );
 
-        // Update jitter.
-        if (data.jitter_ms !== null &&
-            data.jitter_ms !== undefined) {
-            setText(
-                "jitter",
-                `${formatNumber(data.jitter_ms)} ms`
-            );
-        } else {
-            setText("jitter", "Unavailable");
-        }
+        setText(
+            "jitter",
+            formatNetworkMetric("jitter", data.jitter_ms)
+        );
 
-        // Update packet loss without converting missing values to zero.
-        if (
-            data.packet_loss !== null &&
-            data.packet_loss !== undefined &&
-            Number.isFinite(Number(data.packet_loss))
-        ) {
-            setText(
-                "packetLoss",
-                `${formatNumber(Number(data.packet_loss))} %`
-            );
-        } else {
-            setText("packetLoss", "Unavailable");
+        setText(
+            "packetLoss",
+            formatNetworkMetric("packetLoss", data.packet_loss)
+        );
+
+        if (!isValidMetricNumber(data.packet_loss)) {
             console.warn(
                 "Packet loss is missing or invalid:",
                 data.packet_loss
@@ -578,6 +620,10 @@ async function runBackendNetworkQualityTest() {
         );
 
         backendTestFinished = true;
+
+        currentMetrics.ping = null;
+        currentMetrics.jitter = null;
+        currentMetrics.packetLoss = null;
 
         setText("ping", "Unavailable");
         setText("jitter", "Unavailable");
@@ -611,13 +657,7 @@ function updateCloudflareLiveResults(type) {
                     .getDownloadBandwidth();
 
 
-            if (
-                bandwidth !== undefined &&
-                bandwidth !== null &&
-                Number.isFinite(
-                    Number(bandwidth)
-                )
-            ) {
+            if (isValidMetricNumber(bandwidth)) {
 
                 currentMetrics.download =
                     Number(bandwidth) /
@@ -626,9 +666,10 @@ function updateCloudflareLiveResults(type) {
 
                 setText(
                     "download",
-                    `${formatNumber(
+                    formatNetworkMetric(
+                        "download",
                         currentMetrics.download
-                    )} Mbps`
+                    )
                 );
             }
 
@@ -650,13 +691,7 @@ function updateCloudflareLiveResults(type) {
                     .getUploadBandwidth();
 
 
-            if (
-                bandwidth !== undefined &&
-                bandwidth !== null &&
-                Number.isFinite(
-                    Number(bandwidth)
-                )
-            ) {
+            if (isValidMetricNumber(bandwidth)) {
 
                 currentMetrics.upload =
                     Number(bandwidth) /
@@ -665,9 +700,10 @@ function updateCloudflareLiveResults(type) {
 
                 setText(
                     "upload",
-                    `${formatNumber(
+                    formatNetworkMetric(
+                        "upload",
                         currentMetrics.upload
-                    )} Mbps`
+                    )
                 );
             }
 
@@ -695,10 +731,7 @@ function updateCloudflareFinalResults(
             results.getDownloadBandwidth();
 
 
-        if (
-            download !== undefined &&
-            download !== null
-        ) {
+        if (isValidMetricNumber(download)) {
 
             currentMetrics.download =
                 Number(download) /
@@ -707,10 +740,14 @@ function updateCloudflareFinalResults(
 
             setText(
                 "download",
-                `${formatNumber(
+                formatNetworkMetric(
+                    "download",
                     currentMetrics.download
-                )} Mbps`
+                )
             );
+        } else {
+            currentMetrics.download = null;
+            setText("download", "Unavailable");
         }
 
     } catch (error) {
@@ -718,6 +755,8 @@ function updateCloudflareFinalResults(
         console.warn(
             "Final download unavailable."
         );
+        currentMetrics.download = null;
+        setText("download", "Unavailable");
     }
 
 
@@ -727,10 +766,7 @@ function updateCloudflareFinalResults(
             results.getUploadBandwidth();
 
 
-        if (
-            upload !== undefined &&
-            upload !== null
-        ) {
+        if (isValidMetricNumber(upload)) {
 
             currentMetrics.upload =
                 Number(upload) /
@@ -739,10 +775,14 @@ function updateCloudflareFinalResults(
 
             setText(
                 "upload",
-                `${formatNumber(
+                formatNetworkMetric(
+                    "upload",
                     currentMetrics.upload
-                )} Mbps`
+                )
             );
+        } else {
+            currentMetrics.upload = null;
+            setText("upload", "Unavailable");
         }
 
     } catch (error) {
@@ -750,6 +790,8 @@ function updateCloudflareFinalResults(
         console.warn(
             "Final upload unavailable."
         );
+        currentMetrics.upload = null;
+        setText("upload", "Unavailable");
     }
 
 
@@ -813,7 +855,25 @@ async function finishCombinedTest() {
 
     updateAISections();
 
-    updateSessionStatistics();
+    if (currentMetrics.download === null) {
+        setText("download", "Unavailable");
+    }
+
+    if (currentMetrics.upload === null) {
+        setText("upload", "Unavailable");
+    }
+
+    if (currentMetrics.ping === null) {
+        setText("ping", "Unavailable");
+    }
+
+    if (currentMetrics.jitter === null) {
+        setText("jitter", "Unavailable");
+    }
+
+    if (currentMetrics.packetLoss === null) {
+        setText("packetLoss", "Unavailable");
+    }
 
 
     /*
@@ -993,218 +1053,9 @@ function updateLiveDashboard() {
 
 function updateConnectivityScore() {
 
-    let score = 0;
-
-
-    /* -----------------------------------------------------
-       DOWNLOAD = 30 POINTS
-       ----------------------------------------------------- */
-
-    const download =
-        currentMetrics.download;
-
-
-    if (download !== null) {
-
-        if (download >= 100) {
-            score += 30;
-        }
-
-        else if (download >= 50) {
-            score += 27;
-        }
-
-        else if (download >= 25) {
-            score += 23;
-        }
-
-        else if (download >= 10) {
-            score += 19;
-        }
-
-        else if (download >= 5) {
-            score += 15;
-        }
-
-        else if (download >= 2) {
-            score += 10;
-        }
-
-        else if (download >= 1) {
-            score += 6;
-        }
-
-        else {
-            score += 3;
-        }
-    }
-
-
-    /* -----------------------------------------------------
-       UPLOAD = 20 POINTS
-       ----------------------------------------------------- */
-
-    const upload =
-        currentMetrics.upload;
-
-
-    if (upload !== null) {
-
-        if (upload >= 50) {
-            score += 20;
-        }
-
-        else if (upload >= 25) {
-            score += 18;
-        }
-
-        else if (upload >= 10) {
-            score += 15;
-        }
-
-        else if (upload >= 5) {
-            score += 12;
-        }
-
-        else if (upload >= 2) {
-            score += 9;
-        }
-
-        else if (upload >= 1) {
-            score += 6;
-        }
-
-        else {
-            score += 2;
-        }
-    }
-
-
-    /* -----------------------------------------------------
-       PING = 20 POINTS
-       ----------------------------------------------------- */
-
-    const ping =
-        currentMetrics.ping;
-
-
-    if (ping !== null) {
-
-        if (ping <= 20) {
-            score += 20;
-        }
-
-        else if (ping <= 40) {
-            score += 18;
-        }
-
-        else if (ping <= 60) {
-            score += 16;
-        }
-
-        else if (ping <= 100) {
-            score += 13;
-        }
-
-        else if (ping <= 150) {
-            score += 10;
-        }
-
-        else if (ping <= 200) {
-            score += 7;
-        }
-
-        else if (ping <= 300) {
-            score += 4;
-        }
-
-        else {
-            score += 1;
-        }
-    }
-
-
-    /* -----------------------------------------------------
-       JITTER = 20 POINTS
-       ----------------------------------------------------- */
-
-    const jitter =
-        currentMetrics.jitter;
-
-
-    if (jitter !== null) {
-
-        if (jitter <= 5) {
-            score += 20;
-        }
-
-        else if (jitter <= 10) {
-            score += 17;
-        }
-
-        else if (jitter <= 20) {
-            score += 14;
-        }
-
-        else if (jitter <= 30) {
-            score += 11;
-        }
-
-        else if (jitter <= 50) {
-            score += 8;
-        }
-
-        else if (jitter <= 100) {
-            score += 5;
-        }
-
-        else {
-            score += 2;
-        }
-    }
-
-
-    /* -----------------------------------------------------
-       PACKET LOSS = 10 POINTS
-       ----------------------------------------------------- */
-
-    const packetLoss =
-        currentMetrics.packetLoss;
-
-
-    if (packetLoss !== null) {
-
-        if (packetLoss <= 0.5) {
-            score += 10;
-        }
-
-        else if (packetLoss <= 1) {
-            score += 8;
-        }
-
-        else if (packetLoss <= 2) {
-            score += 6;
-        }
-
-        else if (packetLoss <= 5) {
-            score += 3;
-        }
-    }
-
-
-    /*
-       Maximum = 100
-    */
-
     currentMetrics.score =
-        Math.round(
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    score
-                )
-            )
+        calculateConnectivityScore(
+            currentMetrics
         );
 
 
@@ -1214,26 +1065,10 @@ function updateConnectivityScore() {
     );
 
 
-    let status = "Poor";
-
-
-    if (
-        currentMetrics.score >= 85
-    ) {
-        status = "Excellent";
-    }
-
-    else if (
-        currentMetrics.score >= 70
-    ) {
-        status = "Good";
-    }
-
-    else if (
-        currentMetrics.score >= 50
-    ) {
-        status = "Average";
-    }
+    const status =
+        getConnectivityStatus(
+            currentMetrics.score
+        );
 
 
     setText(
@@ -2337,25 +2172,28 @@ function updateSessionStatistics() {
 
     setText(
         "averageSpeed",
-        `${formatNumber(
+        formatNetworkMetric(
+            "download",
             averageSpeed
-        )} Mbps`
+        )
     );
 
 
     setText(
         "averagePing",
-        `${formatNumber(
+        formatNetworkMetric(
+            "ping",
             averagePing
-        )} ms`
+        )
     );
 
 
     setText(
         "peakSpeed",
-        `${formatNumber(
+        formatNetworkMetric(
+            "download",
             peakSpeed
-        )} Mbps`
+        )
     );
 
 
@@ -3077,10 +2915,20 @@ function setTestMessage(
 
 
 /* =========================================================
-   DEBUG API
+   DEBUG API & EXPORTS
    ========================================================= */
 
-window.smartConnectivity = {
+const smartConnectivity = {
+
+    formatNumber,
+
+    formatMetric,
+
+    formatNetworkMetric,
+
+    isValidMetricNumber,
+
+    METRIC_UNITS,
 
     getCurrentNetworkData() {
 
@@ -3114,6 +2962,7 @@ window.smartConnectivity = {
 
     findBetterConnectionArea
 };
+ master
 /**
  * Export saved network connectivity history as a CSV file.
  */
@@ -3304,3 +3153,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+
+
+if (typeof window !== "undefined") {
+    window.smartConnectivity = smartConnectivity;
+    window.formatNumber = formatNumber;
+    window.formatMetric = formatMetric;
+    window.formatNetworkMetric = formatNetworkMetric;
+    window.isValidMetricNumber = isValidMetricNumber;
+    window.METRIC_UNITS = METRIC_UNITS;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+        formatNumber,
+        formatMetric,
+        formatNetworkMetric,
+        isValidMetricNumber,
+        METRIC_UNITS,
+        smartConnectivity
+    };
+}
+ master
