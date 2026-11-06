@@ -31,7 +31,20 @@ let currentMetrics = {
    HELPERS
    ============================================================ */
 
+ fix/issue-32-ui-enhancements
 const $ = id => document.getElementById(id);
+
+/* =========================================================
+   DOM HELPERS
+   ========================================================= */
+
+function $(id) {
+    if (typeof document === "undefined") {
+        return null;
+    }
+    return document.getElementById(id);
+}
+ master
 
 function setText(id, value) {
     const el = $(id);
@@ -57,22 +70,94 @@ function number(value, fallback = null) {
     return valid(value) ? Number(value) : fallback;
 }
 
+fix/issue-32-ui-enhancements
 function firstValid(...values) {
     for (const value of values) {
         if (valid(value)) return Number(value);
+
+function isValidMetricNumber(value) {
+    if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        typeof value === "boolean" ||
+        typeof value === "object" ||
+        (typeof value === "string" && value.trim() === "")
+    ) {
+        return false;
+    }
+
+    return Number.isFinite(Number(value));
+}
+
+function formatNumber(value, decimals = 1) {
+    if (!isValidMetricNumber(value)) {
+        return "--";
+master
     }
     return null;
 }
 
+fix/issue-32-ui-enhancements
 function showToast(message) {
     const toast = $("toast");
     const text = $("toast-message");
 
+const METRIC_UNITS = {
+    download: "Mbps",
+    download_mbps: "Mbps",
+    upload: "Mbps",
+    upload_mbps: "Mbps",
+    ping: "ms",
+    ping_ms: "ms",
+    jitter: "ms",
+    jitter_ms: "ms",
+    packetLoss: "%",
+    packet_loss: "%"
+};
+
+function formatMetric(value, unit = "", decimals = 1) {
+    if (!isValidMetricNumber(value)) {
+        return "Unavailable";
+    }
+
+    const formatted = Number(value).toFixed(decimals);
+    return unit ? `${formatted} ${unit}` : formatted;
+}
+
+function formatNetworkMetric(metricType, value, decimals = 1) {
+    const unit = METRIC_UNITS[metricType] !== undefined ? METRIC_UNITS[metricType] : "";
+    return formatMetric(value, unit, decimals);
+}
+
+let applicationInitialized = false;
+master
+
     if (!toast) return;
 
+ fix/issue-32-ui-enhancements
     if (text) text.textContent = message;
 
     toast.classList.add("show");
+
+if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeApplication,
+            { once: true }
+        );
+    } else {
+        initializeApplication();
+    }
+}
+
+async function initializeApplication() {
+    if (applicationInitialized) {
+        return;
+    }
+    applicationInitialized = true;
+master
 
     clearTimeout(showToast.timer);
     showToast.timer = setTimeout(() => {
@@ -640,10 +725,1825 @@ function updateHistoryChart(history = sessionTests, range = null) {
 async function startNetworkTest() {
     if (testInProgress) return;
 
+ fix/issue-32-ui-enhancements
     if (!navigator.onLine) {
         setText("status", "Offline");
         setText("testMessage", "Your device is offline. Connect to the Internet first.");
         showToast("No Internet connection.");
+
+        const data = await response.json();
+
+        console.log(
+            "Backend network quality:",
+            data
+        );
+
+        // Store the latest backend response.
+        backendQuality = data;
+
+        currentMetrics.ping = isValidMetricNumber(data.ping_ms)
+            ? Number(data.ping_ms)
+            : null;
+        currentMetrics.jitter = isValidMetricNumber(data.jitter_ms)
+            ? Number(data.jitter_ms)
+            : null;
+        currentMetrics.packetLoss = isValidMetricNumber(data.packet_loss)
+            ? Number(data.packet_loss)
+            : null;
+
+        // Diagnostic: inspect the actual API and stored values.
+        console.log("PACKET LOSS TRACE:", {
+            apiValue: data.packet_loss,
+            storedValue: currentMetrics.packetLoss,
+            packetsSent: data.packets_sent,
+            packetsReceived: data.packets_received
+        });
+
+        // Update ping, jitter, and packet loss
+        setText(
+            "ping",
+            formatNetworkMetric("ping", data.ping_ms)
+        );
+
+        setText(
+            "jitter",
+            formatNetworkMetric("jitter", data.jitter_ms)
+        );
+
+        setText(
+            "packetLoss",
+            formatNetworkMetric("packetLoss", data.packet_loss)
+        );
+
+        if (!isValidMetricNumber(data.packet_loss)) {
+            console.warn(
+                "Packet loss is missing or invalid:",
+                data.packet_loss
+            );
+        }
+
+        backendTestFinished = true;
+
+        updateLiveDashboard();
+        checkIfEverythingFinished();
+
+    } catch (error) {
+        console.error(
+            "Backend network quality error:",
+            error
+        );
+
+        backendTestFinished = true;
+
+        currentMetrics.ping = null;
+        currentMetrics.jitter = null;
+        currentMetrics.packetLoss = null;
+
+        setText("ping", "Unavailable");
+        setText("jitter", "Unavailable");
+        setText("packetLoss", "Unavailable");
+
+        checkIfEverythingFinished();
+    }
+}
+
+
+/* =========================================================
+   CLOUDFLARE LIVE RESULTS
+   ========================================================= */
+
+function updateCloudflareLiveResults(type) {
+
+    if (
+        !speedTest ||
+        !speedTest.results
+    ) {
+        return;
+    }
+
+
+    if (type === "download") {
+
+        try {
+
+            const bandwidth =
+                speedTest.results
+                    .getDownloadBandwidth();
+
+
+            if (isValidMetricNumber(bandwidth)) {
+
+                currentMetrics.download =
+                    Number(bandwidth) /
+                    1000000;
+
+
+                setText(
+                    "download",
+                    formatNetworkMetric(
+                        "download",
+                        currentMetrics.download
+                    )
+                );
+            }
+
+        } catch (error) {
+
+            console.debug(
+                "Download result not ready."
+            );
+        }
+    }
+
+
+    if (type === "upload") {
+
+        try {
+
+            const bandwidth =
+                speedTest.results
+                    .getUploadBandwidth();
+
+
+            if (isValidMetricNumber(bandwidth)) {
+
+                currentMetrics.upload =
+                    Number(bandwidth) /
+                    1000000;
+
+
+                setText(
+                    "upload",
+                    formatNetworkMetric(
+                        "upload",
+                        currentMetrics.upload
+                    )
+                );
+            }
+
+        } catch (error) {
+
+            console.debug(
+                "Upload result not ready."
+            );
+        }
+    }
+}
+
+
+/* =========================================================
+   CLOUDFLARE FINAL RESULTS
+   ========================================================= */
+
+function updateCloudflareFinalResults(
+    results
+) {
+
+    try {
+
+        const download =
+            results.getDownloadBandwidth();
+
+
+        if (isValidMetricNumber(download)) {
+
+            currentMetrics.download =
+                Number(download) /
+                1000000;
+
+
+            setText(
+                "download",
+                formatNetworkMetric(
+                    "download",
+                    currentMetrics.download
+                )
+            );
+        } else {
+            currentMetrics.download = null;
+            setText("download", "Unavailable");
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Final download unavailable."
+        );
+        currentMetrics.download = null;
+        setText("download", "Unavailable");
+    }
+
+
+    try {
+
+        const upload =
+            results.getUploadBandwidth();
+
+
+        if (isValidMetricNumber(upload)) {
+
+            currentMetrics.upload =
+                Number(upload) /
+                1000000;
+
+
+            setText(
+                "upload",
+                formatNetworkMetric(
+                    "upload",
+                    currentMetrics.upload
+                )
+            );
+        } else {
+            currentMetrics.upload = null;
+            setText("upload", "Unavailable");
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Final upload unavailable."
+        );
+        currentMetrics.upload = null;
+        setText("upload", "Unavailable");
+    }
+
+
+    console.log(
+        "Cloudflare summary:",
+        results.getSummary()
+    );
+}
+
+
+/* =========================================================
+   CHECK BOTH TESTS
+   ========================================================= */
+
+function checkIfEverythingFinished() {
+
+    if (
+        !speedTestFinished ||
+        !backendTestFinished
+    ) {
+        return;
+    }
+
+
+    finishCombinedTest();
+}
+
+
+/* =========================================================
+   FINAL COMBINED RESULT
+   ========================================================= */
+
+async function finishCombinedTest() {
+
+    clearTimeout(testTimeout);
+
+
+    /*
+       Make sure the latest network type is available.
+    */
+
+    detectNetworkType();
+
+
+    /*
+       Calculate final score using:
+
+       Download
+       Upload
+       Ping
+       Jitter
+       Packet Loss
+    */
+
+    updateConnectivityScore();
+
+
+    updateApplicationReadiness();
+
+    updateDiagnosis();
+
+    updateAISections();
+
+    if (currentMetrics.download === null) {
+        setText("download", "Unavailable");
+    }
+
+    if (currentMetrics.upload === null) {
+        setText("upload", "Unavailable");
+    }
+
+    if (currentMetrics.ping === null) {
+        setText("ping", "Unavailable");
+    }
+
+    if (currentMetrics.jitter === null) {
+        setText("jitter", "Unavailable");
+    }
+
+    if (currentMetrics.packetLoss === null) {
+        setText("packetLoss", "Unavailable");
+    }
+
+
+    /*
+       Save the final result.
+    */
+
+    const testData = {
+
+        timestamp:
+            new Date().toISOString(),
+
+        download_mbps:
+            currentMetrics.download,
+
+        upload_mbps:
+            currentMetrics.upload,
+
+        ping_ms:
+            currentMetrics.ping,
+
+        jitter_ms:
+            currentMetrics.jitter,
+
+        packet_loss:
+            currentMetrics.packetLoss,
+
+        network_type:
+            currentMetrics.networkType,
+
+        connectivity_score:
+            currentMetrics.score,
+
+        latitude:
+            currentLocation
+                ? currentLocation.latitude
+                : null,
+
+        longitude:
+            currentLocation
+                ? currentLocation.longitude
+                : null
+    };
+
+
+    sessionTests.push(
+        testData
+    );
+
+
+    await saveNetworkTest(
+        testData
+    );
+
+
+    await loadNetworkHistory();
+
+
+    testRunning = false;
+
+
+    const button = $("startTest");
+
+    if (button) {
+
+        button.disabled = false;
+
+        button.textContent =
+            "Start Test";
+    }
+
+
+    stopSessionTimer();
+
+
+    setTestMessage(
+        "Internet speed test completed."
+    );
+
+
+    updateSessionStatistics();
+
+
+    console.log(
+        "FINAL NETWORK DATA:",
+        testData
+    );
+}
+
+
+/* =========================================================
+   RESET UI
+   ========================================================= */
+
+function resetCurrentTestUI() {
+
+    currentMetrics = {
+
+        download: null,
+
+        upload: null,
+
+        ping: null,
+
+        jitter: null,
+
+        packetLoss: null,
+
+        networkType:
+            currentMetrics.networkType ||
+            "Unknown",
+
+        score: 0
+    };
+
+
+    setText(
+        "download",
+        "Testing..."
+    );
+
+    setText(
+        "upload",
+        "Testing..."
+    );
+
+    setText(
+        "ping",
+        "Testing..."
+    );
+
+    setText(
+        "jitter",
+        "Testing..."
+    );
+
+    setText(
+        "packetLoss",
+        "Testing..."
+    );
+
+    setText(
+        "score",
+        "0"
+    );
+
+    setText(
+        "status",
+        "Testing..."
+    );
+
+
+    setTestMessage(
+        "Preparing network test..."
+    );
+}
+
+
+/* =========================================================
+   LIVE DASHBOARD
+   ========================================================= */
+
+function updateLiveDashboard() {
+
+    updateConnectivityScore();
+
+    updateApplicationReadiness();
+
+    updateDiagnosis();
+
+    updateAISections();
+}
+
+
+/* =========================================================
+   CONNECTIVITY SCORE
+   ========================================================= */
+
+function updateConnectivityScore() {
+
+    currentMetrics.score =
+        calculateConnectivityScore(
+            currentMetrics
+        );
+
+
+    setText(
+        "score",
+        currentMetrics.score
+    );
+
+
+    const status =
+        getConnectivityStatus(
+            currentMetrics.score
+        );
+
+
+    setText(
+        "status",
+        status
+    );
+
+
+    const dot =
+        $("networkStatusDot");
+
+
+    if (dot) {
+
+        dot.className =
+            "status-dot";
+
+        dot.classList.add(
+            status.toLowerCase()
+        );
+    }
+}
+
+
+/* =========================================================
+   APPLICATION READINESS
+   ========================================================= */
+
+function updateApplicationReadiness() {
+
+    const download =
+        currentMetrics.download || 0;
+
+    const upload =
+        currentMetrics.upload || 0;
+
+    const ping =
+        currentMetrics.ping ?? 999;
+
+    const jitter =
+        currentMetrics.jitter ?? 999;
+
+    const packetLoss =
+        currentMetrics.packetLoss ?? 100;
+
+
+    /* =====================================================
+       GAMING
+       ===================================================== */
+
+    let gaming = 0;
+
+
+    if (download >= 10) {
+        gaming += 25;
+    }
+
+    else if (download >= 5) {
+        gaming += 18;
+    }
+
+    else if (download >= 2) {
+        gaming += 10;
+    }
+
+
+    if (upload >= 5) {
+        gaming += 15;
+    }
+
+    else if (upload >= 2) {
+        gaming += 10;
+    }
+
+    else if (upload >= 1) {
+        gaming += 5;
+    }
+
+
+    if (ping <= 40) {
+        gaming += 35;
+    }
+
+    else if (ping <= 80) {
+        gaming += 28;
+    }
+
+    else if (ping <= 120) {
+        gaming += 18;
+    }
+
+    else if (ping <= 200) {
+        gaming += 8;
+    }
+
+
+    if (jitter <= 10) {
+        gaming += 15;
+    }
+
+    else if (jitter <= 20) {
+        gaming += 10;
+    }
+
+    else if (jitter <= 50) {
+        gaming += 5;
+    }
+
+
+    if (packetLoss <= 0.5) {
+        gaming += 10;
+    }
+
+    else if (packetLoss <= 2) {
+        gaming += 5;
+    }
+
+
+    /* =====================================================
+       VIDEO CALL
+       ===================================================== */
+
+    let videoCall = 0;
+
+
+    if (download >= 5) {
+        videoCall += 25;
+    }
+
+    else if (download >= 2) {
+        videoCall += 15;
+    }
+
+    else if (download >= 1) {
+        videoCall += 8;
+    }
+
+
+    if (upload >= 3) {
+        videoCall += 30;
+    }
+
+    else if (upload >= 1) {
+        videoCall += 18;
+    }
+
+
+    if (ping <= 80) {
+        videoCall += 20;
+    }
+
+    else if (ping <= 150) {
+        videoCall += 12;
+    }
+
+    else if (ping <= 250) {
+        videoCall += 5;
+    }
+
+
+    if (jitter <= 20) {
+        videoCall += 15;
+    }
+
+    else if (jitter <= 50) {
+        videoCall += 8;
+    }
+
+
+    if (packetLoss <= 1) {
+        videoCall += 10;
+    }
+
+    else if (packetLoss <= 3) {
+        videoCall += 5;
+    }
+
+
+    /* =====================================================
+       STREAMING
+       ===================================================== */
+
+    let streaming = 0;
+
+
+    if (download >= 25) {
+        streaming = 100;
+    }
+
+    else if (download >= 10) {
+        streaming = 85;
+    }
+
+    else if (download >= 5) {
+        streaming = 70;
+    }
+
+    else if (download >= 3) {
+        streaming = 55;
+    }
+
+    else if (download >= 1) {
+        streaming = 30;
+    }
+
+    else {
+        streaming = 10;
+    }
+
+
+    if (packetLoss > 5) {
+        streaming -= 10;
+    }
+
+
+    /* =====================================================
+       BROWSING
+       ===================================================== */
+
+    let browsing = 0;
+
+
+    if (download >= 10) {
+        browsing += 55;
+    }
+
+    else if (download >= 5) {
+        browsing += 45;
+    }
+
+    else if (download >= 2) {
+        browsing += 35;
+    }
+
+    else if (download >= 1) {
+        browsing += 25;
+    }
+
+
+    if (ping <= 100) {
+        browsing += 35;
+    }
+
+    else if (ping <= 200) {
+        browsing += 25;
+    }
+
+    else if (ping <= 300) {
+        browsing += 15;
+    }
+
+    else {
+        browsing += 5;
+    }
+
+
+    if (packetLoss <= 1) {
+        browsing += 10;
+    }
+
+    else if (packetLoss <= 5) {
+        browsing += 5;
+    }
+
+
+    gaming =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Math.round(gaming)
+            )
+        );
+
+
+    videoCall =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Math.round(videoCall)
+            )
+        );
+
+
+    streaming =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Math.round(streaming)
+            )
+        );
+
+
+    browsing =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Math.round(browsing)
+            )
+        );
+
+
+    setText(
+        "gamingScore",
+        `${gaming}%`
+    );
+
+    setProgress(
+        "gamingProgress",
+        gaming
+    );
+
+
+    setText(
+        "videoCallScore",
+        `${videoCall}%`
+    );
+
+    setProgress(
+        "videoCallProgress",
+        videoCall
+    );
+
+
+    setText(
+        "streamingScore",
+        `${streaming}%`
+    );
+
+    setProgress(
+        "streamingProgress",
+        streaming
+    );
+
+
+    setText(
+        "browsingScore",
+        `${browsing}%`
+    );
+
+    setProgress(
+        "browsingProgress",
+        browsing
+    );
+}
+
+
+/* =========================================================
+   SMART DIAGNOSIS
+   ========================================================= */
+
+function updateDiagnosis() {
+
+    const recommendation =
+        $("recommendation");
+
+
+    if (!recommendation) {
+        return;
+    }
+
+
+    if (
+        currentMetrics.download === null &&
+        currentMetrics.ping === null
+    ) {
+
+        recommendation.textContent =
+            "Run an Internet test to begin network analysis.";
+
+        return;
+    }
+
+
+    const problems = [];
+
+
+    if (
+        currentMetrics.download !== null &&
+        currentMetrics.download < 5
+    ) {
+
+        problems.push(
+            "download speed is low"
+        );
+    }
+
+
+    if (
+        currentMetrics.upload !== null &&
+        currentMetrics.upload < 2
+    ) {
+
+        problems.push(
+            "upload speed is low"
+        );
+    }
+
+
+    if (
+        currentMetrics.ping !== null &&
+        currentMetrics.ping > 100
+    ) {
+
+        problems.push(
+            "latency is high"
+        );
+    }
+
+
+    if (
+        currentMetrics.jitter !== null &&
+        currentMetrics.jitter > 30
+    ) {
+
+        problems.push(
+            "jitter is high"
+        );
+    }
+
+
+    if (
+        currentMetrics.packetLoss !== null &&
+        currentMetrics.packetLoss > 2
+    ) {
+
+        problems.push(
+            "packet loss is elevated"
+        );
+    }
+
+
+    if (problems.length === 0) {
+
+        recommendation.textContent =
+            "Current measurements do not show a major connectivity issue.";
+
+        return;
+    }
+
+
+    recommendation.textContent =
+        `Detected issue: ${problems.join(", ")}. ` +
+        "Consider moving closer to the access point, " +
+        "reducing network congestion, or checking the network connection.";
+}
+
+
+/* =========================================================
+   AI SECTIONS - REAL MODEL API
+   ========================================================= */
+
+async function updateAISections() {
+
+    const prediction =
+        $("predictionResult");
+
+    const anomaly =
+        $("anomalyResult");
+
+    if (prediction) {
+        prediction.textContent =
+            "Running AI prediction...";
+    }
+
+    if (anomaly) {
+        anomaly.textContent =
+            "Running anomaly detection...";
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/ai/analyze`,
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                `AI API returned ${response.status}`
+            );
+        }
+
+        const result =
+            await response.json();
+
+        if (!result.success) {
+
+            throw new Error(
+                result.message ||
+                "AI analysis failed."
+            );
+        }
+
+        const predictionData =
+            result.prediction || {};
+
+        const anomalyData =
+            result.anomaly || {};
+
+        if (prediction) {
+
+            if (
+                predictionData.predicted_connectivity_score !==
+                undefined
+            ) {
+
+                prediction.textContent =
+                    `Predicted connectivity score: ` +
+                    `${Number(
+                        predictionData.predicted_connectivity_score
+                    ).toFixed(2)}/100 ` +
+                    `(${predictionData.predicted_quality || "Unknown"}).`;
+
+            } else {
+
+                prediction.textContent =
+                    "AI prediction unavailable.";
+            }
+        }
+
+        if (anomaly) {
+
+            if (anomalyData.anomaly === true) {
+
+                anomaly.textContent =
+                    `Anomaly detected. ` +
+                    `Reconstruction error: ` +
+                    `${Number(
+                        anomalyData.reconstruction_error
+                    ).toFixed(6)} ` +
+                    `(threshold: ` +
+                    `${Number(
+                        anomalyData.threshold
+                    ).toFixed(6)}).`;
+
+            } else if (anomalyData.anomaly === false) {
+
+                anomaly.textContent =
+                    `No anomaly detected. ` +
+                    `Reconstruction error: ` +
+                    `${Number(
+                        anomalyData.reconstruction_error
+                    ).toFixed(6)} ` +
+                    `(threshold: ` +
+                    `${Number(
+                        anomalyData.threshold
+                    ).toFixed(6)}).`;
+
+            } else {
+
+                anomaly.textContent =
+                    "AI anomaly result unavailable.";
+            }
+        }
+
+    } catch (error) {
+
+        console.error(
+            "AI analysis request failed:",
+            error
+        );
+
+        if (prediction) {
+
+            prediction.textContent =
+                "AI prediction unavailable. Check the backend.";
+        }
+
+        if (anomaly) {
+
+            anomaly.textContent =
+                "AI anomaly detection unavailable. Check the backend.";
+        }
+    }
+}
+
+
+/* =========================================================
+   SAVE NETWORK TEST
+   ========================================================= */
+
+async function saveNetworkTest(
+    testData
+) {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/network-test`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            testData
+                        )
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Server returned ${response.status}`
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Network test saved:",
+            data
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not save network test:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   NETWORK HISTORY
+   ========================================================= */
+
+async function loadNetworkHistory() {
+
+    try {
+
+        const rangeElement =
+            $("historyRange");
+
+
+        const range =
+            rangeElement
+                ? rangeElement.value
+                : "recent";
+
+
+        const response =
+            await fetch(
+                `${API_BASE}/network-history?range=${encodeURIComponent(
+                    range
+                )}`,
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `History request failed: ${response.status}`
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const history =
+            Array.isArray(data)
+                ? data
+                : [];
+
+
+        updateHistoryChart(
+            history
+        );
+
+
+        if (history.length > 0) {
+
+            const latest =
+                history[
+                    history.length - 1
+                ];
+
+
+            /*
+               Restore latest database result.
+            */
+
+            if (
+                currentMetrics.download === null &&
+                latest.download_mbps !== null
+            ) {
+
+                currentMetrics.download =
+                    Number(
+                        latest.download_mbps
+                    );
+            }
+
+
+            if (
+                currentMetrics.upload === null &&
+                latest.upload_mbps !== null
+            ) {
+
+                currentMetrics.upload =
+                    Number(
+                        latest.upload_mbps
+                    );
+            }
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not load network history:",
+            error
+        );
+
+
+        updateHistoryChart(
+            []
+        );
+    }
+}
+
+
+/* =========================================================
+   HISTORY CHART
+   ========================================================= */
+
+function updateHistoryChart(
+    history
+) {
+
+    const canvas =
+        $("networkChart");
+
+
+    if (!canvas) {
+        return;
+    }
+
+
+    if (
+        typeof Chart === "undefined"
+    ) {
+
+        console.warn(
+            "Chart.js is not loaded."
+        );
+
+        return;
+    }
+
+
+    const labels = [];
+
+    const scores = [];
+
+    const downloads = [];
+
+
+    history.forEach(
+        item => {
+
+            const date =
+                item.timestamp;
+
+
+            if (date) {
+
+                const d =
+                    new Date(date);
+
+
+                labels.push(
+                    d.toLocaleTimeString(
+                        [],
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    )
+                );
+
+            }
+
+            else {
+
+                labels.push("");
+            }
+
+
+            scores.push(
+                Number(
+                    item.connectivity_score
+                ) || 0
+            );
+
+
+            downloads.push(
+                Number(
+                    item.download_mbps
+                ) || 0
+            );
+        }
+    );
+
+
+    if (networkChart) {
+
+        networkChart.destroy();
+
+        networkChart = null;
+    }
+
+
+    networkChart =
+        new Chart(
+            canvas.getContext("2d"),
+            {
+                type: "line",
+
+                data: {
+
+                    labels,
+
+                    datasets: [
+
+                        {
+                            label:
+                                "Connectivity Score",
+
+                            data:
+                                scores,
+
+                            borderWidth: 2,
+
+                            tension: 0.3,
+
+                            yAxisID:
+                                "scoreAxis"
+                        },
+
+                        {
+                            label:
+                                "Download Mbps",
+
+                            data:
+                                downloads,
+
+                            borderWidth: 2,
+
+                            tension: 0.3,
+
+                            yAxisID:
+                                "speedAxis"
+                        }
+                    ]
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    interaction: {
+                        mode: "index",
+                        intersect: false
+                    },
+
+                    scales: {
+
+                        scoreAxis: {
+
+                            type: "linear",
+
+                            position: "left",
+
+                            min: 0,
+
+                            max: 100,
+
+                            title: {
+                                display: true,
+                                text: "Score"
+                            }
+                        },
+
+
+                        speedAxis: {
+
+                            type: "linear",
+
+                            position: "right",
+
+                            beginAtZero: true,
+
+                            title: {
+                                display: true,
+                                text: "Mbps"
+                            },
+
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            }
+        );
+}
+
+
+/* =========================================================
+   SESSION TIMER
+   ========================================================= */
+
+function startSessionTimer() {
+
+    stopSessionTimer();
+
+    updateSessionTime();
+
+
+    sessionTimer =
+        setInterval(
+            updateSessionTime,
+            1000
+        );
+}
+
+
+function stopSessionTimer() {
+
+    if (sessionTimer) {
+
+        clearInterval(
+            sessionTimer
+        );
+
+        sessionTimer = null;
+    }
+}
+
+
+function updateSessionTime() {
+
+    if (!testStartTime) {
+        return;
+    }
+
+
+    const elapsedSeconds =
+        Math.floor(
+            (
+                Date.now() -
+                testStartTime
+            ) / 1000
+        );
+
+
+    const hours =
+        Math.floor(
+            elapsedSeconds / 3600
+        );
+
+
+    const minutes =
+        Math.floor(
+            (
+                elapsedSeconds % 3600
+            ) / 60
+        );
+
+
+    const seconds =
+        elapsedSeconds % 60;
+
+
+    const formatted =
+        String(hours).padStart(2, "0") +
+        ":" +
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+
+
+    setText(
+        "sessionTime",
+        formatted
+    );
+}
+
+
+/* =========================================================
+   SESSION STATISTICS
+   ========================================================= */
+
+function updateSessionStatistics() {
+
+    if (
+        sessionTests.length === 0
+    ) {
+
+        setText(
+            "averageSpeed",
+            "0 Mbps"
+        );
+
+        setText(
+            "averagePing",
+            "0 ms"
+        );
+
+        setText(
+            "peakSpeed",
+            "0 Mbps"
+        );
+
+        setText(
+            "downtime",
+            "0 min"
+        );
+
+        return;
+    }
+
+
+    const speeds =
+        sessionTests
+            .map(
+                test =>
+                    Number(
+                        test.download_mbps
+                    )
+            )
+            .filter(
+                Number.isFinite
+            );
+
+
+    const pings =
+        sessionTests
+            .map(
+                test =>
+                    Number(
+                        test.ping_ms
+                    )
+            )
+            .filter(
+                Number.isFinite
+            );
+
+
+    const averageSpeed =
+        speeds.length
+            ? speeds.reduce(
+                (a, b) => a + b,
+                0
+            ) / speeds.length
+            : 0;
+
+
+    const averagePing =
+        pings.length
+            ? pings.reduce(
+                (a, b) => a + b,
+                0
+            ) / pings.length
+            : 0;
+
+
+    const peakSpeed =
+        speeds.length
+            ? Math.max(...speeds)
+            : 0;
+
+
+    setText(
+        "averageSpeed",
+        formatNetworkMetric(
+            "download",
+            averageSpeed
+        )
+    );
+
+
+    setText(
+        "averagePing",
+        formatNetworkMetric(
+            "ping",
+            averagePing
+        )
+    );
+
+
+    setText(
+        "peakSpeed",
+        formatNetworkMetric(
+            "download",
+            peakSpeed
+        )
+    );
+
+
+    /*
+       This is currently the number of poor test sessions,
+       not real measured downtime minutes.
+    */
+
+    const poorTests =
+        sessionTests.filter(
+            test =>
+                Number(
+                    test.connectivity_score
+                ) < 30
+        ).length;
+
+
+    setText(
+        "downtime",
+        `${poorTests} min`
+    );
+}
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+function initializeMap() {
+
+    const mapElement =
+        $("connectivityMap");
+
+
+    if (!mapElement) {
+        return;
+    }
+
+
+    if (
+        typeof L === "undefined"
+    ) {
+
+        console.warn(
+            "Leaflet is not loaded."
+        );
+
+        return;
+    }
+
+
+    connectivityMap =
+        L.map(
+            mapElement
+        ).setView(
+            [
+                18.5204,
+                73.8567
+            ],
+            10
+        );
+
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "&copy; OpenStreetMap contributors"
+        }
+    ).addTo(
+        connectivityMap
+    );
+}
+
+
+/* =========================================================
+   LOCATION
+   ========================================================= */
+
+function detectCurrentLocation() {
+    const result = $("locationResult");
+
+    if (!navigator.geolocation) {
+        if (result) {
+            result.textContent =
+                "Geolocation is not supported by this browser.";
+        }
+        return;
+    }
+
+    if (result) {
+        result.textContent = "Detecting your location...";
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            console.log("Location detection:", {
+                latitude,
+                longitude,
+                accuracyMeters: accuracy,
+                timestamp: new Date(position.timestamp)
+            });
+
+            // Reject readings with more than 100 metres
+            // of reported uncertainty.
+            if (accuracy > 500) {
+                if (result) {
+                    result.textContent =
+                        `Location is too approximate ` +
+                        `(±${Math.round(accuracy)} m). ` +
+                        `Move to an open area and try again.`;
+                }
+                return;
+            }
+
+            currentLocation = {
+                latitude,
+                longitude,
+                accuracy,
+                timestamp: position.timestamp
+            };
+
+            if (result) {
+                result.textContent =
+                    `Location detected: ` +
+                    `${latitude.toFixed(6)}, ` +
+                    `${longitude.toFixed(6)} ` +
+                    `(±${Math.round(accuracy)} m)`;
+            }
+
+            showLocationOnMap(latitude, longitude);
+        },
+
+        error => {
+            console.error("Geolocation error:", error);
+
+            let message = "Unable to detect location.";
+
+            if (error.code === 1) {
+                message =
+                    "Location permission denied. Allow location access in Chrome.";
+            } else if (error.code === 2) {
+                message =
+                    "Location unavailable. Check your device's location settings.";
+            } else if (error.code === 3) {
+                message =
+                    "Location request timed out. Please try again.";
+            }
+
+            if (result) {
+                result.textContent = message;
+            }
+        },
+
+        {
+            enableHighAccuracy: true,
+            timeout: 30000,
+            maximumAge: 0
+        }
+    );
+}
+
+
+/* =========================================================
+   SHOW LOCATION
+   ========================================================= */
+
+let currentLocationMarker = null;
+
+function showLocationOnMap(latitude, longitude) {
+    if (!connectivityMap) {
+ master
         return;
     }
 
@@ -1448,6 +3348,7 @@ function updateSessionStatistics() {
    UTILITY + PUBLIC API
    ============================================================ */
 
+fix/issue-32-ui-enhancements
 async function checkBackendHealth() {
     try {
         const response = await fetch(`${API_BASE}/health`, {
@@ -1460,6 +3361,23 @@ async function checkBackendHealth() {
         return false;
     }
 }
+
+/* =========================================================
+   DEBUG API & EXPORTS
+   ========================================================= */
+
+const smartConnectivity = {
+
+    formatNumber,
+
+    formatMetric,
+
+    formatNetworkMetric,
+
+    isValidMetricNumber,
+
+    METRIC_UNITS,
+ master
 
 const smartConnectivity = {
     getCurrentNetworkData() {
@@ -1480,6 +3398,7 @@ const smartConnectivity = {
     calculateConnectivityScore
 };
 
+ fix/issue-32-ui-enhancements
 window.smartConnectivity = smartConnectivity;
 window.calculateConnectivityScore = calculateConnectivityScore;
 window.exportHistoryToCSV = exportHistoryToCSV;
@@ -1491,3 +3410,34 @@ window.METRIC_UNITS = {
     jitter: "ms",
     packetLoss: "%"
 };
+
+
+    detectCurrentLocation,
+
+
+    saveCurrentLocation,
+
+
+    findBetterConnectionArea
+};
+
+if (typeof window !== "undefined") {
+    window.smartConnectivity = smartConnectivity;
+    window.formatNumber = formatNumber;
+    window.formatMetric = formatMetric;
+    window.formatNetworkMetric = formatNetworkMetric;
+    window.isValidMetricNumber = isValidMetricNumber;
+    window.METRIC_UNITS = METRIC_UNITS;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+        formatNumber,
+        formatMetric,
+        formatNetworkMetric,
+        isValidMetricNumber,
+        METRIC_UNITS,
+        smartConnectivity
+    };
+}
+ master
