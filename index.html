@@ -1,12 +1,24 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e1b4b">
+  <meta name="description" content="AI-powered internet quality and connectivity monitoring dashboard.">
+
   <title>Smart Connectivity Analyser</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,1255 +27,622 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            indigoDeep: '#1E1B4B',
-            slateMuted: '#475569',
-            accentViolet: '#8B5CF6',
-            accentPink: '#EC4899',
-            iceBlue: '#A5B4FC',
-            lightViolet: '#C084FC',
-            cyanAccent: '#67E8F9'
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
-          }
-        }
-      }
-    };
-  </script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
 
   <style>
-    * {
+    :root {
+      font-family: "Inter", system-ui, sans-serif;
+      color: #1e1b4b;
+      background: #eef2ff;
+    }
+
+    *, *::before, *::after {
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
+      min-height: 100vh;
+      margin: 0;
       background:
-        radial-gradient(at 0% 0%, #A5B4FC 0px, transparent 50%),
-        radial-gradient(at 100% 0%, #C084FC 0px, transparent 50%),
-        radial-gradient(at 50% 100%, #67E8F9 0px, transparent 50%),
-        radial-gradient(at 100% 100%, #A5B4FC 0px, transparent 50%),
+        radial-gradient(at 0% 0%, rgba(165,180,252,.7) 0, transparent 48%),
+        radial-gradient(at 100% 0%, rgba(192,132,252,.55) 0, transparent 48%),
+        radial-gradient(at 50% 100%, rgba(103,232,249,.4) 0, transparent 48%),
         #e0e7ff;
       background-attachment: fixed;
-      min-height: 100vh;
-      color: #1E1B4B;
+    }
+
+    button, select {
+      font-family: inherit;
+    }
+
+    .dashboard-container {
+      width: min(100% - 2rem, 1440px);
+      margin-inline: auto;
+      padding-block: 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .dashboard-container > * {
+      min-width: 0;
     }
 
     .glass-card {
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(255,255,255,.68);
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(31,38,135,.07);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
-      transition: all 0.25s ease-in-out;
     }
 
-    .glass-card:hover {
-      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
-    }
-
-    .bg-accent-gradient {
-      background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
-    }
-
-    .text-accent-gradient {
-      background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .control-btn-matched {
-      height: 38px !important;
-      min-height: 38px !important;
-      box-sizing: border-box !important;
-      padding: 0 16px !important;
-      font-size: 0.875rem !important;
-      font-weight: 600 !important;
-      border-radius: 12px !important;
-      background: rgba(255, 255, 255, 0.75) !important;
-      color: #1E1B4B !important;
-      border: 1px solid rgba(255, 255, 255, 0.8) !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-      cursor: pointer !important;
-    }
-
-    .control-btn-matched:hover {
-      background: white !important;
-      border-color: #8B5CF6 !important;
-    }
-
-    select.control-btn-matched {
-      appearance: none !important;
-      padding-right: 36px !important;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%238B5CF6'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
-      background-repeat: no-repeat !important;
-      background-position: right 10px center !important;
-      background-size: 16px !important;
-    }
-
-    select.control-btn-matched option {
-      background: white !important;
-      color: #1E1B4B !important;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(139, 92, 246, 0.4);
-      border-radius: 10px;
-    }
-
-    /* CONNECTIVITY MAP */
-
-    #connectivity-map {
-      width: 100%;
-      height: 100%;
-      min-height: 320px;
-      border-radius: 14px;
-      z-index: 1;
-    }
-
-    .leaflet-popup-content-wrapper {
-      background: rgba(255, 255, 255, 0.9) !important;
-      backdrop-filter: blur(12px) !important;
-      border-radius: 12px !important;
-      color: #1E1B4B !important;
-    }
-
-    .leaflet-popup-tip {
-      background: white !important;
-    }
-
-    /* CONNECTIVITY SCORE CARD */
-
-    .score-card {
+    .dashboard-header,
+    .score-card,
+    .metrics-card,
+    .history-card,
+    .session-card,
+    .map-card,
+    .readiness-card,
+    .ai-card,
+    .recommendation-card {
       grid-column: 1 / -1;
-      min-width: 0;
-      color: #1E1B4B;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-self: stretch;
     }
 
-    .score-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      font-size: 0.9rem;
-      font-weight: 700;
-    }
-
-    .score-value-row {
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-      line-height: 1;
-    }
-
-    .score-number {
-      font-size: clamp(2.8rem, 6vw, 4rem);
-      font-weight: 800;
-      letter-spacing: -0.06em;
-      color: #1E1B4B;
-    }
-
-    .score-out-of {
-      padding-bottom: 7px;
-      color: #64748b;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .quality-text {
-      width: fit-content;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(139, 92, 246, 0.12);
-      color: #6D28D9;
-      font-size: 0.8rem;
-      font-weight: 700;
+    .accent-gradient {
+      background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
     }
 
     .status-dot {
-      width: 10px;
-      height: 10px;
-      flex: 0 0 10px;
+      display: inline-block;
+      width: .65rem;
+      height: .65rem;
+      flex: 0 0 .65rem;
       border-radius: 50%;
       background: #94a3b8;
-      box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.14);
+      box-shadow: 0 0 0 4px rgba(148,163,184,.14);
     }
 
-    .score-meter {
-      width: 100%;
-      height: 9px;
+    .score-number {
+      font-size: clamp(2.75rem, 7vw, 4rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -.06em;
+    }
+
+    .score-meter,
+    .progress-track {
+      height: .55rem;
       overflow: hidden;
       border-radius: 999px;
-      background: rgba(139, 92, 246, 0.12);
+      background: rgba(139,92,246,.13);
     }
 
-    .score-meter-fill {
+    .score-meter-fill,
+    .progress-fill {
       width: 0%;
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, #8B5CF6, #EC4899);
-      transition: width 0.45s ease;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+      transition: width .35s ease;
     }
 
-    .score-help {
-      border-top: 1px solid rgba(139, 92, 246, 0.14);
-      padding-top: 10px;
-      font-size: 0.78rem;
-    }
-
-    .score-help summary {
-      color: #475569;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .score-help-content {
-      padding: 10px 2px 2px;
-      color: #64748b;
-      line-height: 1.6;
-    }
-
-    .score-guide-table {
+    /* MAP FIX */
+    .map-frame {
       width: 100%;
-      border-collapse: collapse;
-      text-align: left;
+      height: 360px;
+      min-height: 320px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 1rem;
     }
 
-    .score-guide-table th,
-    .score-guide-table td {
-      padding: 6px 8px;
-      border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+    #connectivityMap {
+      width: 100%;
+      height: 100%;
+      min-height: 320px;
+      position: relative;
+      z-index: 1;
+      background: #e0e7ff;
     }
 
-    .rating-excellent {
-      color: #059669;
-      font-weight: 700;
+    .leaflet-container {
+      width: 100%;
+      height: 100%;
+      font-family: inherit;
+      z-index: 1;
     }
 
-    .rating-good {
-      color: #0D9488;
-      font-weight: 700;
+    .leaflet-tile {
+      max-width: none !important;
     }
 
-    .rating-average {
-      color: #D97706;
-      font-weight: 700;
+    /* CHART FIX */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      min-height: 280px;
     }
 
-    .rating-poor {
-      color: #DC2626;
-      font-weight: 700;
+    #networkChart {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .control-btn {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      padding: .55rem .9rem;
+      border: 1px solid rgba(139,92,246,.18);
+      border-radius: .75rem;
+      background: rgba(255,255,255,.8);
+      color: #312e81;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .control-btn:hover {
+      background: #fff;
+      border-color: #8b5cf6;
+      transform: translateY(-1px);
+    }
+
+    .control-btn:disabled {
+      cursor: not-allowed;
+      opacity: .6;
+      transform: none;
+    }
+
+    .metric-value {
+      overflow-wrap: anywhere;
+      font-size: clamp(1.35rem, 3vw, 1.8rem);
+      font-weight: 800;
+    }
+
+    .metric-card {
+      min-width: 0;
+    }
+
+    .status-dot.connected {
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,.14);
+    }
+
+    .status-dot.disconnected {
+      background: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239,68,68,.14);
+    }
+
+    .status-dot.testing {
+      background: #f59e0b;
+      box-shadow: 0 0 0 4px rgba(245,158,11,.14);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     @media (min-width: 640px) {
       .score-card {
-        grid-column: span 3 / span 3;
+        grid-column: span 5;
+      }
+
+      .metrics-card {
+        grid-column: span 7;
+      }
+
+      .history-card {
+        grid-column: span 8;
+      }
+
+      .session-card {
+        grid-column: span 4;
+      }
+
+      .ai-card {
+        grid-column: span 6;
       }
     }
 
-    @media (max-width: 640px) {
-      #connectivity-map {
+    @media (min-width: 1024px) {
+      .score-card {
+        grid-column: span 4;
+      }
+
+      .metrics-card {
+        grid-column: span 8;
+      }
+
+      .history-card {
+        grid-column: span 8;
+      }
+
+      .session-card {
+        grid-column: span 4;
+      }
+    }
+
+    @media (max-width: 639px) {
+      .dashboard-container {
+        width: min(100% - 1rem, 1440px);
+        padding-top: .5rem;
+        gap: .85rem;
+      }
+
+      .map-frame {
+        height: 300px;
         min-height: 300px;
       }
 
-      .score-card {
-        padding: 20px;
+      #connectivityMap {
+        min-height: 300px;
+      }
+
+      .chart-container {
+        height: 280px;
+        min-height: 260px;
       }
     }
   </style>
 </head>
 
-<body class="p-4 md:p-8 font-sans antialiased">
+<body class="font-sans antialiased">
 
-  <div class="max-w-7xl mx-auto space-y-6">
+<main class="dashboard-container" id="dashboard">
 
-    <!-- HEADER -->
+  <!-- HEADER -->
+  <header class="dashboard-header glass-card p-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
 
-    <header class="glass-card p-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-accent-gradient flex items-center justify-center text-white shadow-md">
-          <i class="fa-solid fa-network-wired text-lg"></i>
-        </div>
-
-        <div>
-          <h1 class="text-xl font-bold text-indigoDeep">Smart Connectivity</h1>
-          <p class="text-xs text-slateMuted font-medium">Real-Time Network Analyser</p>
-        </div>
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl accent-gradient flex items-center justify-center text-white shadow-md">
+        <i class="fa-solid fa-network-wired text-lg"></i>
       </div>
 
-      <nav class="flex items-center gap-1 bg-white/40 p-1.5 rounded-xl border border-white/60">
-        <a href="#dashboard" class="px-4 py-2 text-xs font-semibold rounded-lg bg-accent-gradient text-white">Dashboard</a>
-        <a href="#history" class="px-4 py-2 text-xs font-semibold text-slateMuted hover:bg-white/50 rounded-lg">History</a>
-        <a href="#applications" class="px-4 py-2 text-xs font-semibold text-slateMuted hover:bg-white/50 rounded-lg">Applications</a>
-        <a href="#location" class="px-4 py-2 text-xs font-semibold text-slateMuted hover:bg-white/50 rounded-lg">Location</a>
-      </nav>
+      <div>
+        <h1 class="text-xl md:text-2xl font-extrabold text-indigo-950">
+          Smart Connectivity Analyser
+        </h1>
+        <p class="text-xs md:text-sm text-slate-600 font-medium">
+          AI-powered Internet Quality Monitoring
+        </p>
+      </div>
+    </div>
 
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-semibold">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Online
-        </div>
+    <nav aria-label="Dashboard navigation" class="flex flex-wrap items-center justify-center gap-1">
+      <a href="#dashboard" class="px-3 py-2 text-xs font-semibold rounded-lg bg-violet-100 text-violet-800">Dashboard</a>
+      <a href="#history" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/60">History</a>
+      <a href="#applications" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/60">Applications</a>
+      <a href="#location" class="px-3 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:bg-white/60">Location</a>
+    </nav>
 
-        <button id="run-test-btn" onclick="runNetworkTest()" class="px-4 py-2 rounded-xl bg-accent-gradient text-white text-xs font-semibold shadow-md flex items-center gap-2">
-          <i class="fa-solid fa-bolt text-amber-300"></i>
-          <span id="test-btn-text">Run Test</span>
+    <button id="startTest" type="button" class="control-btn accent-gradient !text-white !border-transparent px-5 py-3">
+      <i class="fa-solid fa-bolt"></i>
+      <span>Start Test</span>
+    </button>
+
+  </header>
+
+  <!-- CONNECTIVITY SCORE -->
+  <section class="score-card glass-card p-5 md:p-6 space-y-4" aria-labelledby="scoreHeading">
+
+    <div class="flex items-center justify-between gap-3">
+      <h2 id="scoreHeading" class="font-bold text-slate-800">Connectivity Score</h2>
+
+      <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+        <span id="networkStatusDot" class="status-dot"></span>
+        <span id="status" aria-live="polite">Not Connected</span>
+      </div>
+    </div>
+
+    <div class="flex items-end gap-2">
+      <span id="score" class="score-number">0</span>
+      <span class="text-slate-500 font-semibold pb-1">/ 100</span>
+    </div>
+
+    <div class="score-meter" role="progressbar" aria-label="Connectivity score" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="scoreProgress" class="score-meter-fill"></div>
+    </div>
+
+    <p id="testMessage" class="text-sm text-slate-600" aria-live="polite">
+      Run a connectivity test to analyse your network.
+    </p>
+
+    <details class="border-t border-violet-100 pt-3 text-xs text-slate-600">
+      <summary class="font-bold cursor-pointer">How is this calculated?</summary>
+      <p class="pt-2 leading-relaxed">
+        The score represents overall connection quality using download speed,
+        upload speed, ping, jitter and packet loss.
+      </p>
+    </details>
+
+  </section>
+
+  <!-- NETWORK METRICS -->
+  <section class="metrics-card glass-card p-5 md:p-6 space-y-4" aria-labelledby="metricsHeading">
+
+    <div>
+      <h2 id="metricsHeading" class="text-lg font-bold">Real-Time Network Metrics</h2>
+      <p class="text-xs text-slate-500">Live performance measurements</p>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+
+      <article class="metric-card rounded-xl bg-white/55 p-4">
+        <p class="text-xs font-semibold text-slate-500">DOWNLOAD</p>
+        <p class="metric-value mt-2"><span id="download">—</span></p>
+        <p class="text-xs text-slate-500">Mbps</p>
+      </article>
+
+      <article class="metric-card rounded-xl bg-white/55 p-4">
+        <p class="text-xs font-semibold text-slate-500">UPLOAD</p>
+        <p class="metric-value mt-2"><span id="upload">—</span></p>
+        <p class="text-xs text-slate-500">Mbps</p>
+      </article>
+
+      <article class="metric-card rounded-xl bg-white/55 p-4">
+        <p class="text-xs font-semibold text-slate-500">PING</p>
+        <p class="metric-value mt-2"><span id="ping">—</span></p>
+        <p class="text-xs text-slate-500">ms</p>
+      </article>
+
+      <article class="metric-card rounded-xl bg-white/55 p-4">
+        <p class="text-xs font-semibold text-slate-500">JITTER</p>
+        <p class="metric-value mt-2"><span id="jitter">—</span></p>
+        <p class="text-xs text-slate-500">ms</p>
+      </article>
+
+      <article class="metric-card rounded-xl bg-white/55 p-4">
+        <p class="text-xs font-semibold text-slate-500">PACKET LOSS</p>
+        <p class="metric-value mt-2"><span id="packetLoss">—</span></p>
+        <p class="text-xs text-slate-500">%</p>
+      </article>
+
+      <article class="metric-card rounded-xl bg-white/55 p-4">
+        <p class="text-xs font-semibold text-slate-500">NETWORK TYPE</p>
+        <p class="metric-value mt-2"><span id="networkType">—</span></p>
+        <p class="text-xs text-slate-500">Connection type</p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- NETWORK HISTORY -->
+  <section id="history" class="history-card glass-card p-5 md:p-6 space-y-4" aria-labelledby="historyHeading">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/60 pb-3">
+
+      <div>
+        <h2 id="historyHeading" class="text-lg font-bold">Network History</h2>
+        <p class="text-xs text-slate-500">Connectivity and speed trends</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <label for="historyRange" class="sr-only">History timeframe</label>
+
+        <select id="historyRange" class="control-btn">
+          <option value="recent">Recent</option>
+          <option value="1h">Last 1 Hour</option>
+          <option value="24h">Last 24 Hours</option>
+          <option value="7d">Last 7 Days</option>
+        </select>
+
+        <button id="exportCSV" type="button" class="control-btn">
+          <i class="fa-solid fa-file-csv text-violet-600"></i>
+          Export CSV
         </button>
       </div>
 
-    </header>
+    </div>
 
-    <!-- DASHBOARD KPI CARDS -->
+    <div class="chart-container">
+      <canvas id="networkChart" role="img" aria-label="Network performance history chart"></canvas>
+    </div>
 
-    <section id="dashboard" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+  </section>
 
-      <div class="glass-card p-4 space-y-2">
-        <div class="flex justify-between text-slateMuted text-xs font-semibold">
-          DOWNLOAD <i class="fa-solid fa-arrow-down text-accentViolet"></i>
-        </div>
-        <div class="text-2xl font-extrabold" id="kpi-download">94.2</div>
-        <div class="text-xs text-slateMuted">Mbps</div>
-        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
-          <div id="bar-download" class="bg-accent-gradient h-full rounded-full" style="width:82%"></div>
-        </div>
+  <!-- SESSION STATISTICS -->
+  <section class="session-card glass-card p-5 md:p-6 space-y-4" aria-labelledby="sessionHeading">
+
+    <h2 id="sessionHeading" class="text-lg font-bold border-b border-white/60 pb-3">
+      Session Statistics
+    </h2>
+
+    <dl class="space-y-3">
+
+      <div class="flex justify-between items-center gap-3 p-3 rounded-xl bg-white/45">
+        <dt class="text-xs font-semibold text-slate-600">Session Duration</dt>
+        <dd id="sessionTime" class="font-bold text-sm">00:00:00</dd>
       </div>
 
-      <div class="glass-card p-4 space-y-2">
-        <div class="flex justify-between text-slateMuted text-xs font-semibold">
-          UPLOAD <i class="fa-solid fa-arrow-up text-accentPink"></i>
-        </div>
-        <div class="text-2xl font-extrabold" id="kpi-upload">38.6</div>
-        <div class="text-xs text-slateMuted">Mbps</div>
-        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
-          <div id="bar-upload" class="bg-accent-gradient h-full rounded-full" style="width:65%"></div>
-        </div>
+      <div class="flex justify-between items-center gap-3 p-3 rounded-xl bg-white/45">
+        <dt class="text-xs font-semibold text-slate-600">Average Speed</dt>
+        <dd id="averageSpeed" class="font-bold text-sm">0 Mbps</dd>
       </div>
 
-      <div class="glass-card p-4 space-y-2">
-        <div class="flex justify-between text-slateMuted text-xs font-semibold">
-          PING <i class="fa-solid fa-wave-square text-cyan-500"></i>
-        </div>
-        <div class="text-2xl font-extrabold" id="kpi-ping">14</div>
-        <div class="text-xs text-slateMuted">ms</div>
-        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
-          <div id="bar-ping" class="bg-emerald-500 h-full rounded-full" style="width:90%"></div>
-        </div>
+      <div class="flex justify-between items-center gap-3 p-3 rounded-xl bg-white/45">
+        <dt class="text-xs font-semibold text-slate-600">Average Ping</dt>
+        <dd id="averagePing" class="font-bold text-sm">0 ms</dd>
       </div>
 
-      <div class="glass-card p-4 space-y-2">
-        <div class="flex justify-between text-slateMuted text-xs font-semibold">
-          JITTER <i class="fa-solid fa-wave-square text-accentViolet"></i>
-        </div>
-        <div class="text-2xl font-extrabold" id="kpi-jitter">2.1</div>
-        <div class="text-xs text-slateMuted">ms</div>
-        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
-          <div id="bar-jitter" class="bg-emerald-400 h-full rounded-full" style="width:95%"></div>
-        </div>
+      <div class="flex justify-between items-center gap-3 p-3 rounded-xl bg-white/45">
+        <dt class="text-xs font-semibold text-slate-600">Peak Speed</dt>
+        <dd id="peakSpeed" class="font-bold text-sm">0 Mbps</dd>
       </div>
 
-      <div class="glass-card p-4 space-y-2">
-        <div class="flex justify-between text-slateMuted text-xs font-semibold">
-          PACKET LOSS <i class="fa-solid fa-circle-exclamation text-amber-500"></i>
-        </div>
-        <div class="text-2xl font-extrabold" id="kpi-loss">0.0</div>
-        <div class="text-xs text-slateMuted">%</div>
-        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
-          <div id="bar-loss" class="bg-emerald-500 h-full rounded-full" style="width:100%"></div>
-        </div>
+      <div class="flex justify-between items-center gap-3 p-3 rounded-xl bg-white/45">
+        <dt class="text-xs font-semibold text-slate-600">Downtime</dt>
+        <dd id="downtime" class="font-bold text-sm">0 min</dd>
       </div>
 
-      <div class="glass-card p-4 space-y-2">
-        <div class="flex justify-between text-slateMuted text-xs font-semibold">
-          NETWORK <i class="fa-solid fa-wifi text-accentViolet"></i>
-        </div>
-        <div class="text-2xl font-extrabold" id="network-type">Wi-Fi</div>
-        <div class="text-xs text-slateMuted">Connection type</div>
-        <div class="bg-white/60 h-1.5 rounded-full overflow-hidden">
-          <div class="bg-accent-gradient h-full rounded-full w-full"></div>
-        </div>
+    </dl>
+  </section>
+
+  <!-- INTERACTIVE MAP -->
+  <section id="location" class="map-card glass-card p-5 md:p-6 space-y-4" aria-labelledby="mapHeading">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/60 pb-3">
+
+      <div>
+        <h2 id="mapHeading" class="text-lg font-bold">Interactive Connectivity Map</h2>
+        <p class="text-xs text-slate-500">Detect your location and explore network connectivity</p>
       </div>
 
-      <!-- CONNECTIVITY SCORE CARD -->
+      <span class="text-xs font-bold rounded-full bg-violet-100 text-violet-800 px-3 py-2">
+        <i class="fa-solid fa-location-dot mr-1"></i>
+        Location services
+      </span>
 
-      <aside class="score-card glass-card p-5 md:p-6" aria-label="Connectivity score summary">
+    </div>
 
-        <div class="score-header">
-          <span>Connectivity Score</span>
-          <span id="networkStatusDot" class="status-dot" aria-label="Network status indicator"></span>
-        </div>
+    <div class="flex flex-wrap gap-2">
 
-        <div class="score-value-row">
-          <div id="score" class="score-number">0</div>
-          <div class="score-out-of">/100</div>
-        </div>
+      <button id="detectLocation" type="button" class="control-btn">
+        <i class="fa-solid fa-crosshairs"></i>
+        Detect Location
+      </button>
 
-        <div id="status" class="quality-text" aria-live="polite">Not Connected</div>
+      <button id="saveLocation" type="button" class="control-btn">
+        <i class="fa-solid fa-bookmark"></i>
+        Save Point
+      </button>
 
-        <div class="score-meter" aria-hidden="true">
-          <div id="scoreProgress" class="score-meter-fill"></div>
-        </div>
+      <button id="findBetterArea" type="button" class="control-btn">
+        <i class="fa-solid fa-magnifying-glass-location"></i>
+        Find Better Area
+      </button>
 
-        <details class="score-help">
-          <summary>How is this calculated?</summary>
-          <div class="score-help-content">
-            <p>
-              The connectivity score is calculated using download speed,
-              upload speed, ping, jitter and packet loss.
-            </p>
-          </div>
-        </details>
+    </div>
 
-        <details class="score-help">
-          <summary>Connectivity Score Guide</summary>
-          <div class="score-help-content">
-            <table class="score-guide-table">
-              <thead>
-                <tr>
-                  <th>Score</th>
-                  <th>Rating</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>85–100</td><td class="rating-excellent">Excellent</td></tr>
-                <tr><td>70–84</td><td class="rating-good">Good</td></tr>
-                <tr><td>50–69</td><td class="rating-average">Average</td></tr>
-                <tr><td>0–49</td><td class="rating-poor">Poor</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </details>
+    <p id="locationResult" class="text-xs text-slate-600" aria-live="polite">
+      Your detected location will appear here.
+    </p>
 
-      </aside>
+    <div class="map-frame rounded-2xl border border-white/70 shadow-inner">
+      <div id="connectivityMap" role="application" aria-label="Interactive network connectivity map"></div>
+    </div>
 
-    </section>
+    <p id="navigationResult" class="text-xs text-slate-600" aria-live="polite"></p>
 
-    <!-- NETWORK HISTORY -->
+  </section>
 
-    <section id="history" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- APPLICATION READINESS -->
+  <section id="applications" class="readiness-card glass-card p-5 md:p-6 space-y-4" aria-labelledby="readinessHeading">
 
-      <div class="lg:col-span-2 glass-card p-5 md:p-6 space-y-4">
+    <div>
+      <h2 id="readinessHeading" class="text-lg font-bold">Application Readiness</h2>
+      <p class="text-xs text-slate-500">Estimated suitability for common online activities</p>
+    </div>
 
-        <div class="flex flex-col sm:flex-row justify-between gap-4 pb-3 border-b border-white/40">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-          <div>
-            <h2 class="text-lg font-bold">Network History</h2>
-            <p class="text-xs text-slateMuted">Performance score and speed trends</p>
-          </div>
+      <article class="rounded-xl bg-white/50 p-4 space-y-3">
+        <div class="text-2xl">🎮</div>
+        <h3 class="font-bold">Gaming</h3>
+        <p class="text-xs text-slate-500">Latency, jitter and packet loss</p>
+        <strong id="gamingScore">0%</strong>
+        <div class="progress-track"><div id="gamingProgress" class="progress-fill"></div></div>
+      </article>
 
-          <div class="flex items-center gap-3">
-            <button id="export-csv-btn" onclick="exportHistoryCSV()" class="control-btn-matched">
-              <i class="fa-solid fa-file-csv text-accentViolet"></i>
-              Export CSV
-            </button>
+      <article class="rounded-xl bg-white/50 p-4 space-y-3">
+        <div class="text-2xl">📹</div>
+        <h3 class="font-bold">Video Calling</h3>
+        <p class="text-xs text-slate-500">Upload speed and stability</p>
+        <strong id="videoCallScore">0%</strong>
+        <div class="progress-track"><div id="videoCallProgress" class="progress-fill"></div></div>
+      </article>
 
-            <select id="time-range-select" onchange="updateChartRange(this.value)" class="control-btn-matched">
-              <option value="recent">Recent</option>
-              <option value="1h">Last 1 Hour</option>
-              <option value="24h">Last 24 Hours</option>
-              <option value="7d">Last 7 Days</option>
-            </select>
-          </div>
+      <article class="rounded-xl bg-white/50 p-4 space-y-3">
+        <div class="text-2xl">🎬</div>
+        <h3 class="font-bold">Streaming</h3>
+        <p class="text-xs text-slate-500">Download speed and packet loss</p>
+        <strong id="streamingScore">0%</strong>
+        <div class="progress-track"><div id="streamingProgress" class="progress-fill"></div></div>
+      </article>
 
-        </div>
+      <article class="rounded-xl bg-white/50 p-4 space-y-3">
+        <div class="text-2xl">🌐</div>
+        <h3 class="font-bold">Browsing</h3>
+        <p class="text-xs text-slate-500">Speed, latency and packet loss</p>
+        <strong id="browsingScore">0%</strong>
+        <div class="progress-track"><div id="browsingProgress" class="progress-fill"></div></div>
+      </article>
 
-        <div class="relative w-full h-72">
-          <canvas id="networkChart"></canvas>
-        </div>
+    </div>
+  </section>
 
+  <!-- AI FUTURE PREDICTION -->
+  <section class="ai-card glass-card p-5 flex gap-4" aria-labelledby="predictionHeading">
+
+    <div class="w-12 h-12 shrink-0 rounded-2xl accent-gradient flex items-center justify-center text-white text-xl">
+      <i class="fa-solid fa-brain"></i>
+    </div>
+
+    <div>
+      <h2 id="predictionHeading" class="font-bold">AI Future Prediction</h2>
+      <p id="predictionResult" class="text-xs text-slate-600 mt-2" aria-live="polite">
+        Waiting for network data.
+      </p>
+    </div>
+
+  </section>
+
+  <!-- AI ANOMALY DETECTION -->
+  <section class="ai-card glass-card p-5 flex gap-4" aria-labelledby="anomalyHeading">
+
+    <div class="w-12 h-12 shrink-0 rounded-2xl bg-cyan-100 flex items-center justify-center text-cyan-700 text-xl">
+      <i class="fa-solid fa-shield-virus"></i>
+    </div>
+
+    <div>
+      <h2 id="anomalyHeading" class="font-bold">AI Anomaly Detection</h2>
+      <p id="anomalyResult" class="text-xs text-slate-600 mt-2" aria-live="polite">
+        Waiting for network data.
+      </p>
+    </div>
+
+  </section>
+
+  <!-- NETWORK RECOMMENDATION -->
+  <section class="recommendation-card glass-card p-5" aria-labelledby="recommendationHeading">
+
+    <div class="flex items-start gap-4">
+      <div class="text-3xl">💡</div>
+
+      <div>
+        <h2 id="recommendationHeading" class="font-bold">Network Recommendation</h2>
+        <p id="recommendation" class="text-xs text-slate-600 mt-2" aria-live="polite">
+          Connect to the Internet to begin network analysis.
+        </p>
       </div>
+    </div>
 
-      <!-- SESSION STATISTICS -->
+  </section>
 
-      <div class="glass-card p-5 md:p-6 space-y-4">
+</main>
 
-        <h2 class="text-lg font-bold border-b border-white/40 pb-3">Session Statistics</h2>
+<!-- TOAST NOTIFICATION -->
+<div id="toast"
+     class="fixed bottom-6 right-6 px-4 py-3 rounded-xl bg-indigo-950 text-white text-xs font-semibold shadow-2xl opacity-0 pointer-events-none transition-all z-50"
+     role="status"
+     aria-live="polite">
+  <span id="toast-message">Notification</span>
+</div>
 
-        <div class="space-y-4">
-
-          <div class="flex justify-between p-3 rounded-xl bg-white/40">
-            <span class="text-xs font-semibold">Session Duration</span>
-            <strong id="stat-duration">00:00:00</strong>
-          </div>
-
-          <div class="flex justify-between p-3 rounded-xl bg-white/40">
-            <span class="text-xs font-semibold">Average Speed</span>
-            <strong id="stat-avg-speed">0 Mbps</strong>
-          </div>
-
-          <div class="flex justify-between p-3 rounded-xl bg-white/40">
-            <span class="text-xs font-semibold">Average Ping</span>
-            <strong id="stat-avg-ping">0 ms</strong>
-          </div>
-
-          <div class="flex justify-between p-3 rounded-xl bg-white/40">
-            <span class="text-xs font-semibold">Peak Speed</span>
-            <strong id="stat-peak-speed">0 Mbps</strong>
-          </div>
-
-          <div class="flex justify-between p-3 rounded-xl bg-white/40">
-            <span class="text-xs font-semibold">Downtime</span>
-            <strong id="stat-downtime">0 min</strong>
-          </div>
-
-        </div>
-      </div>
-
-    </section>
-
-    <!-- CONNECTIVITY MAP -->
-
-    <section id="location" class="glass-card p-5 md:p-6 space-y-4">
-
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/40 pb-3">
-
-        <div>
-          <h2 class="text-lg font-bold">Interactive Connectivity Map</h2>
-          <p class="text-xs text-slateMuted">Network nodes and connectivity routes</p>
-        </div>
-
-        <span class="px-3 py-1 rounded-full text-xs font-bold bg-accentViolet/10 text-accentViolet">
-          <i class="fa-solid fa-server"></i>
-          Mumbai - Cloud South
-        </span>
-
-      </div>
-
-      <div class="relative w-full h-80 rounded-2xl overflow-hidden border border-white/60 shadow-inner">
-        <div id="connectivity-map" class="w-full h-full"></div>
-      </div>
-
-      <div class="flex flex-wrap gap-4 text-xs font-semibold text-slateMuted">
-        <span><i class="fa-solid fa-circle text-emerald-500"></i> Good Connectivity</span>
-        <span><i class="fa-solid fa-circle text-amber-500"></i> Medium Connectivity</span>
-        <span><i class="fa-solid fa-circle text-red-500"></i> Poor Connectivity</span>
-      </div>
-
-    </section>
-
-    <!-- APPLICATION READINESS -->
-
-    <section id="applications" class="space-y-4">
-
-      <h2 class="text-xl font-bold">Application Readiness</h2>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-        <div class="glass-card p-5">
-          <div class="text-2xl">🎮</div>
-          <h3 class="font-bold mt-3">Gaming</h3>
-          <p class="text-xs text-slateMuted mt-2">Latency, jitter and packet loss.</p>
-          <strong id="gamingScore">0%</strong>
-          <div class="bg-white/60 h-1.5 rounded-full mt-3">
-            <div id="gamingProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
-          </div>
-        </div>
-
-        <div class="glass-card p-5">
-          <div class="text-2xl">📹</div>
-          <h3 class="font-bold mt-3">Video Calling</h3>
-          <p class="text-xs text-slateMuted mt-2">Upload speed and stability.</p>
-          <strong id="videoCallScore">0%</strong>
-          <div class="bg-white/60 h-1.5 rounded-full mt-3">
-            <div id="videoCallProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
-          </div>
-        </div>
-
-        <div class="glass-card p-5">
-          <div class="text-2xl">🎬</div>
-          <h3 class="font-bold mt-3">Streaming</h3>
-          <p class="text-xs text-slateMuted mt-2">Download speed and packet loss.</p>
-          <strong id="streamingScore">0%</strong>
-          <div class="bg-white/60 h-1.5 rounded-full mt-3">
-            <div id="streamingProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
-          </div>
-        </div>
-
-        <div class="glass-card p-5">
-          <div class="text-2xl">🌐</div>
-          <h3 class="font-bold mt-3">Browsing</h3>
-          <p class="text-xs text-slateMuted mt-2">Speed, latency and packet loss.</p>
-          <strong id="browsingScore">0%</strong>
-          <div class="bg-white/60 h-1.5 rounded-full mt-3">
-            <div id="browsingProgress" class="bg-accent-gradient h-full rounded-full" style="width:0%"></div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- AI INSIGHTS -->
-
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-      <div class="glass-card p-5 flex gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-accent-gradient flex items-center justify-center text-white text-xl">
-          <i class="fa-solid fa-brain"></i>
-        </div>
-
-        <div>
-          <h3 class="font-bold">AI Future Prediction</h3>
-          <p id="predictionResult" class="text-xs text-slateMuted mt-2">
-            Waiting for network data.
-          </p>
-        </div>
-      </div>
-
-      <div class="glass-card p-5 flex gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-700 text-xl">
-          <i class="fa-solid fa-shield-virus"></i>
-        </div>
-
-        <div>
-          <h3 class="font-bold">AI Anomaly Detection</h3>
-          <p id="anomalyResult" class="text-xs text-slateMuted mt-2">
-            Waiting for network data.
-          </p>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- RECOMMENDATION -->
-
-    <section class="glass-card p-5">
-      <div class="flex items-center gap-4">
-        <div class="text-3xl">💡</div>
-
-        <div>
-          <h2 class="font-bold">Network Recommendation</h2>
-          <p id="recommendation" class="text-xs text-slateMuted mt-2">
-            Connect to the Internet to begin network analysis.
-          </p>
-        </div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- TOAST -->
-
-  <div id="toast" class="fixed bottom-6 right-6 px-4 py-3 rounded-xl bg-indigoDeep text-white text-xs font-semibold shadow-2xl opacity-0 pointer-events-none transition-all z-50">
-    <span id="toast-message">Notification</span>
-  </div>
-
-  <!-- APPLICATION JAVASCRIPT -->
-
-  <script>
-    let networkHistory = [
-      { time: '04:16 PM', score: 98, speed: 92.4, ping: 12 },
-      { time: '05:18 PM', score: 94, speed: 84.1, ping: 15 },
-      { time: '05:22 PM', score: 96, speed: 86.5, ping: 14 },
-      { time: '05:37 PM', score: 99, speed: 104.2, ping: 11 },
-      { time: '05:40 PM', score: 91, speed: 78.9, ping: 18 },
-      { time: '06:10 PM', score: 97, speed: 94.2, ping: 14 }
-    ];
-
-    let chartInstance = null;
-    let mapInstance = null;
-    let userMarker = null;
-    let serverMarkers = [];
-    let routeLine = null;
-
-    // Replace this with your valid MapTiler key.
-    const MAPTILER_API_KEY = 'PASTE_YOUR_MAPTILER_API_KEY_HERE';
-
-    window.addEventListener('load', function() {
-      initChart();
-      initMap();
-      updateConnectivityScore(0);
-    });
-
-    /* ==========================================
-       CONNECTIVITY SCORE DISPLAY
-    ========================================== */
-
-    function updateConnectivityScore(scoreValue) {
-      const safeScore = Math.max(
-        0,
-        Math.min(100, Math.round(Number(scoreValue) || 0))
-      );
-
-      const scoreElement = document.getElementById('score');
-      const statusElement = document.getElementById('status');
-      const statusDot = document.getElementById('networkStatusDot');
-      const progress = document.getElementById('scoreProgress');
-
-      if (scoreElement) {
-        scoreElement.textContent = safeScore;
-      }
-
-      if (progress) {
-        progress.style.width = safeScore + '%';
-      }
-
-      let label = 'Poor';
-      let color = '#DC2626';
-
-      if (safeScore >= 85) {
-        label = 'Excellent';
-        color = '#059669';
-      } else if (safeScore >= 70) {
-        label = 'Good';
-        color = '#0D9488';
-      } else if (safeScore >= 50) {
-        label = 'Average';
-        color = '#D97706';
-      }
-
-      if (statusElement) {
-        statusElement.textContent = label;
-        statusElement.style.color = color;
-
-        statusElement.style.backgroundColor =
-          safeScore >= 85 ? 'rgba(5,150,105,.12)' :
-          safeScore >= 70 ? 'rgba(13,148,136,.12)' :
-          safeScore >= 50 ? 'rgba(217,119,6,.12)' :
-          'rgba(220,38,38,.12)';
-      }
-
-      if (statusDot) {
-        statusDot.style.backgroundColor = color;
-        statusDot.style.boxShadow = '0 0 0 4px ' + (
-          safeScore >= 85 ? 'rgba(5,150,105,.14)' :
-          safeScore >= 70 ? 'rgba(13,148,136,.14)' :
-          safeScore >= 50 ? 'rgba(217,119,6,.14)' :
-          'rgba(220,38,38,.14)'
-        );
-      }
-    }
-
-    /* ==========================================
-       MAP INITIALIZATION
-    ========================================== */
-
-    function initMap() {
-      const mapElement = document.getElementById('connectivity-map');
-
-      if (!mapElement) {
-        console.error('Connectivity map container not found.');
-        return;
-      }
-
-      if (typeof L === 'undefined') {
-        console.error('Leaflet is not loaded.');
-        return;
-      }
-
-      if (mapInstance) {
-        mapInstance.remove();
-        mapInstance = null;
-      }
-
-      serverMarkers = [];
-      userMarker = null;
-      routeLine = null;
-
-      const lat = 19.0760;
-      const lng = 72.8777;
-
-      if (
-        !MAPTILER_API_KEY ||
-        MAPTILER_API_KEY === 'T7nf6Xv8AjTAihJA5Zad'
-      ) {
-        console.error('Please configure a valid MapTiler API key.');
-        return;
-      }
-
-      mapInstance = L.map(mapElement, {
-        zoomControl: true,
-        scrollWheelZoom: true,
-        preferCanvas: true
-      }).setView([lat, lng], 11);
-
-      window.connectivityMap = mapInstance;
-
-      const mapTilerLayer = L.tileLayer(
-        `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${encodeURIComponent(MAPTILER_API_KEY)}`,
-        {
-          tileSize: 512,
-          zoomOffset: -1,
-          minZoom: 1,
-          maxZoom: 20,
-          attribution:
-            '&copy; <a href="https://www.maptiler.com/">MapTiler</a> ' +
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }
-      );
-
-      mapTilerLayer.on('tileerror', function(event) {
-        console.error(
-          'MapTiler tile failed. Verify API key, style access and domain restrictions.',
-          event
-        );
-      });
-
-      mapTilerLayer.addTo(mapInstance);
-
-      const userIcon = L.divIcon({
-        className: 'custom-map-pin',
-        html: `
-          <div style="
-            width:27px;
-            height:27px;
-            border-radius:50%;
-            background:linear-gradient(135deg,#8B5CF6,#EC4899);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:white;
-            border:3px solid white;
-            box-shadow:0 4px 14px rgba(139,92,246,.55);
-            font-size:11px;
-          ">
-            <i class="fa-solid fa-house"></i>
-          </div>
-        `,
-        iconSize: [27, 27],
-        iconAnchor: [13, 13]
-      });
-
-      const serverIcon = L.divIcon({
-        className: 'custom-server-pin',
-        html: `
-          <div style="
-            width:31px;
-            height:31px;
-            border-radius:50%;
-            background:#312e81;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:white;
-            border:3px solid white;
-            box-shadow:0 3px 12px rgba(0,0,0,.35);
-            font-size:12px;
-          ">
-            <i class="fa-solid fa-server"></i>
-          </div>
-        `,
-        iconSize: [31, 31],
-        iconAnchor: [15, 15]
-      });
-
-      userMarker = L.marker(
-        [lat, lng],
-        { icon: userIcon }
-      ).addTo(mapInstance);
-
-      userMarker.bindPopup(`
-        <strong>Your Local Node</strong><br>
-        Mumbai, Maharashtra<br>
-        Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}
-      `);
-
-      const server1 = L.marker(
-        [19.1136, 72.8697],
-        { icon: serverIcon }
-      ).addTo(mapInstance);
-
-      server1.bindPopup(`
-        <strong>AWS South Node</strong><br>
-        <span style="color:#059669">Demo Ping: 8.5 ms</span>
-      `);
-
-      serverMarkers.push(server1);
-
-      const server2 = L.marker(
-        [18.9220, 72.8347],
-        { icon: serverIcon }
-      ).addTo(mapInstance);
-
-      server2.bindPopup(`
-        <strong>Cloudflare CDN Node</strong><br>
-        <span style="color:#059669">Demo Ping: 12.1 ms</span>
-      `);
-
-      serverMarkers.push(server2);
-
-      routeLine = L.polyline(
-        [
-          [lat, lng],
-          [19.1136, 72.8697],
-          [18.9220, 72.8347]
-        ],
-        {
-          color: '#8B5CF6',
-          weight: 3,
-          opacity: 0.85,
-          dashArray: '7, 9',
-          lineCap: 'round'
-        }
-      ).addTo(mapInstance);
-
-      const group = L.featureGroup([
-        userMarker,
-        ...serverMarkers
-      ]);
-
-      mapInstance.fitBounds(group.getBounds(), {
-        padding: [45, 45],
-        maxZoom: 12
-      });
-
-      requestAnimationFrame(() => {
-        if (mapInstance) {
-          mapInstance.invalidateSize(true);
-        }
-      });
-
-      setTimeout(() => {
-        if (mapInstance) {
-          mapInstance.invalidateSize(true);
-        }
-      }, 500);
-
-      if (window.ResizeObserver) {
-        if (window.mapResizeObserver) {
-          window.mapResizeObserver.disconnect();
-        }
-
-        window.mapResizeObserver = new ResizeObserver(() => {
-          if (mapInstance) {
-            mapInstance.invalidateSize();
-          }
-        });
-
-        window.mapResizeObserver.observe(mapElement);
-      }
-
-      console.log('Smart Connectivity Map initialized.');
-    }
-
-    /* ==========================================
-       CHART INITIALIZATION
-    ========================================== */
-
-    function initChart() {
-      const canvas = document.getElementById('networkChart');
-
-      if (!canvas) return;
-
-      const ctx = canvas.getContext('2d');
-
-      const speedGradient = ctx.createLinearGradient(0, 0, 0, 300);
-      speedGradient.addColorStop(0, 'rgba(236,72,153,0.35)');
-      speedGradient.addColorStop(1, 'rgba(236,72,153,0)');
-
-      const scoreGradient = ctx.createLinearGradient(0, 0, 0, 300);
-      scoreGradient.addColorStop(0, 'rgba(139,92,246,0.35)');
-      scoreGradient.addColorStop(1, 'rgba(139,92,246,0)');
-
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-
-        data: {
-          labels: networkHistory.map(item => item.time),
-
-          datasets: [
-            {
-              label: 'Connectivity Score',
-              data: networkHistory.map(item => item.score),
-              borderColor: '#8B5CF6',
-              backgroundColor: scoreGradient,
-              borderWidth: 3,
-              fill: true,
-              tension: 0.4,
-              pointRadius: 4,
-              pointBackgroundColor: '#8B5CF6',
-              yAxisID: 'y'
-            },
-            {
-              label: 'Download Speed (Mbps)',
-              data: networkHistory.map(item => item.speed),
-              borderColor: '#EC4899',
-              backgroundColor: speedGradient,
-              borderWidth: 3,
-              fill: true,
-              tension: 0.4,
-              pointRadius: 4,
-              pointBackgroundColor: '#EC4899',
-              yAxisID: 'y1'
-            }
-          ]
-        },
-
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
-
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {
-                color: '#1E1B4B',
-                usePointStyle: true,
-                padding: 20
-              }
-            },
-
-            tooltip: {
-              backgroundColor: 'rgba(30,27,75,.9)',
-              padding: 10,
-              cornerRadius: 10
-            }
-          },
-
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: '#475569' }
-            },
-
-            y: {
-              min: 50,
-              max: 100,
-              position: 'left',
-              ticks: { color: '#475569' }
-            },
-
-            y1: {
-              min: 0,
-              max: 150,
-              position: 'right',
-              grid: { drawOnChartArea: false },
-              ticks: { color: '#475569' }
-            }
-          }
-        }
-      });
-    }
-
-    /* ==========================================
-       NETWORK TEST
-    ========================================== */
-
-    function runNetworkTest() {
-      const btn = document.getElementById('run-test-btn');
-      const btnText = document.getElementById('test-btn-text');
-
-      if (!btn || !btnText) return;
-
-      btn.disabled = true;
-      btnText.innerText = 'Testing...';
-
-      const interval = setInterval(() => {
-        document.getElementById('kpi-download').innerText =
-          (70 + Math.random() * 45).toFixed(1);
-
-        document.getElementById('kpi-upload').innerText =
-          (25 + Math.random() * 20).toFixed(1);
-
-        document.getElementById('kpi-ping').innerText =
-          Math.floor(10 + Math.random() * 10);
-
-        document.getElementById('kpi-jitter').innerText =
-          (1 + Math.random() * 2).toFixed(1);
-      }, 300);
-
-      setTimeout(() => {
-        clearInterval(interval);
-
-        const finalSpeed = (85 + Math.random() * 35).toFixed(1);
-        const finalPing = Math.floor(11 + Math.random() * 8);
-        const finalScore = Math.floor(92 + Math.random() * 7);
-
-        updateConnectivityScore(finalScore);
-
-        const currentTime = new Date().toLocaleTimeString(
-          [],
-          {
-            hour: '2-digit',
-            minute: '2-digit'
-          }
-        );
-
-        document.getElementById('kpi-download').innerText = finalSpeed;
-        document.getElementById('kpi-ping').innerText = finalPing;
-
-        networkHistory.push({
-          time: currentTime,
-          score: finalScore,
-          speed: parseFloat(finalSpeed),
-          ping: finalPing
-        });
-
-        if (networkHistory.length > 20) {
-          networkHistory.shift();
-        }
-
-        if (chartInstance) {
-          chartInstance.data.labels =
-            networkHistory.map(item => item.time);
-
-          chartInstance.data.datasets[0].data =
-            networkHistory.map(item => item.score);
-
-          chartInstance.data.datasets[1].data =
-            networkHistory.map(item => item.speed);
-
-          chartInstance.update();
-        }
-
-        btn.disabled = false;
-        btnText.innerText = 'Run Test';
-
-        showToast('Network test completed successfully!');
-      }, 2000);
-    }
-
-    /* ==========================================
-       CSV EXPORT
-    ========================================== */
-
-    function exportHistoryCSV() {
-      if (!networkHistory.length) {
-        showToast('No history data available.');
-        return;
-      }
-
-      let csvContent =
-        'Time,Connectivity Score,Download Speed (Mbps),Ping (ms)\n';
-
-      networkHistory.forEach(row => {
-        csvContent +=
-          `${row.time},${row.score},${row.speed},${row.ping}\n`;
-      });
-
-      const blob = new Blob(
-        [csvContent],
-        { type: 'text/csv;charset=utf-8;' }
-      );
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-
-      link.href = url;
-      link.download =
-        `network_history_${new Date().toISOString().slice(0, 10)}.csv`;
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      URL.revokeObjectURL(url);
-
-      showToast('CSV downloaded successfully!');
-    }
-
-    /* ==========================================
-       CHART RANGE
-    ========================================== */
-
-    function updateChartRange(val) {
-      if (!chartInstance) return;
-
-      showToast(`Filter range updated to: ${val}`);
-
-      const limit = val === 'recent' ? 6 :
-                    val === '1h' ? 10 :
-                    val === '24h' ? 15 : 20;
-
-      const data = networkHistory.slice(-limit);
-
-      chartInstance.data.labels =
-        data.map(item => item.time);
-
-      chartInstance.data.datasets[0].data =
-        data.map(item => item.score);
-
-      chartInstance.data.datasets[1].data =
-        data.map(item => item.speed);
-
-      chartInstance.update();
-    }
-
-    /* ==========================================
-       LOCATION DETECTION
-    ========================================== */
-
-    function detectCurrentLocation() {
-      if (!navigator.geolocation) {
-        showToast('Geolocation is not supported.');
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        position => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-
-          if (mapInstance) {
-            mapInstance.setView([lat, lng], 15);
-
-            if (userMarker) {
-              userMarker.setLatLng([lat, lng]);
-            }
-          }
-
-          showToast('Your location detected successfully!');
-        },
-
-        error => {
-          console.error('Location error:', error);
-          showToast('Unable to detect location. Check permissions.');
-        },
-
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-
-    /* ==========================================
-       TOAST NOTIFICATION
-    ========================================== */
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      const message = document.getElementById('toast-message');
-
-      if (!toast || !message) return;
-
-      message.innerText = msg;
-
-      toast.classList.remove('opacity-0', 'pointer-events-none');
-      toast.classList.add('opacity-100');
-
-      setTimeout(() => {
-        toast.classList.remove('opacity-100');
-        toast.classList.add('opacity-0', 'pointer-events-none');
-      }, 3000);
-    }
-
-  </script>
+<!-- PRIMARY JAVASCRIPT -->
+<script src="js/script.js"></script>
 
 </body>
 </html>
